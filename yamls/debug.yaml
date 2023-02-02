@@ -1,0 +1,22 @@
+classifier:
+
+  embeddings:
+    embeddings: "bert-base-cased"    
+    tokenizer: "bert-base-cased"
+
+  model:
+  
+    epochs: 1
+    batch_size: 4
+    positive_class_weight: 1
+    early_stopping: 10
+
+    destination_path: "../results/debug"                  
+    
+  data:
+    path: "../data/hatespeech"
+    train_file: "debug_train.csv"
+    dev_file: "debug_dev.csv"
+    test_file: "debug_test.csv"
+
+ 
