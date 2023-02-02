@@ -27,8 +27,8 @@ def get_row(label, file_name, source_data_dir):
 
 def do_train_data(source_data_dir_train, train_dir, file_label_dict):
     
-    with open(train_dir, 'w', encoding='UTF8', newline='') as f:
-        writer = csv.writer(f)
+    with open(train_dir, 'w', encoding='UTF8', newline='') as train_csv:
+        writer = csv.writer(train_csv,   delimiter='\t')
         writer.writerow(HEADER)
 
         for file in os.listdir(source_data_dir_train):
@@ -43,11 +43,11 @@ def do_dev_test_data(source_data_dir_test, dev_dir, test_dir, file_label_dict):
     no_hate_counter = 1
 
     with open(dev_dir, 'w', encoding='UTF8', newline='') as dev_csv:
-        dev_writer = csv.writer(dev_csv)
+        dev_writer = csv.writer(dev_csv,  delimiter='\t')
         dev_writer.writerow(HEADER)
 
         with open(test_dir, 'w', encoding='UTF8', newline='') as test_csv:
-            test_writer = csv.writer(test_csv)
+            test_writer = csv.writer(test_csv,  delimiter='\t')
             test_writer.writerow(HEADER)
 
             for file in os.listdir(source_data_dir_test):
