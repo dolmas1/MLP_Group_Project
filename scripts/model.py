@@ -28,6 +28,8 @@ from evaluation import evaluate
 
 # Cuda
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# print("DEVICE USED: ", device)
+
 
 label2id = {"noHate":0, "hate":1}
 transformers_logging.set_verbosity_error()
@@ -84,7 +86,7 @@ def run_cl(embeddings, model, data):
                 ]
             )
     logging.info("Welcome :)\n")
-
+    logging.info(f"Device used: {device}\n")
     # pretrained models
     embeds = embeddings["embeddings"]
     tok = embeddings["tokenizer"]

@@ -36,7 +36,7 @@ def train(model,
     
     # initialize running values
 
-    eval_every = len(train_loader) // 2
+    eval_every = len(train_loader.dataset) // 2
 
     running_loss = 0.0
     valid_running_loss = 0.0
