@@ -112,7 +112,7 @@ def run_cl(embeddings, model, data):
     test_dataloader = torch.utils.data.DataLoader(test_hate_data, batch_size=batch_size)
 
 
-    optimizer = optim.Adam(classifier.parameters(), lr=2e-5)
+    optimizer = optim.Adam(classifier.parameters(), lr=1e-3)
 
     logging.info("Starting Training!")
     train(model=classifier, optimizer=optimizer, train_loader = train_dataloader, valid_loader = val_dataloader, num_epochs = epochs, 
