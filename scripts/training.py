@@ -36,7 +36,7 @@ def train(model,
     
     # initialize running values
 
-    eval_every = len(train_loader) // 2
+    eval_every = len(train_loader.dataset) // 2
 
     running_loss = 0.0
     valid_running_loss = 0.0
@@ -65,6 +65,10 @@ def train(model,
             output = model(text, labels)
             #logits = output.logits
             #probs = F.softmax(logits, dim=1)
+            print("logits", output.logits)
+            print("pred", torch.argmax(output.logits, 1).tolist())
+            print("true", labels)
+
             loss = output.loss
 
             optimizer.zero_grad()
@@ -85,12 +89,17 @@ def train(model,
                     for batch, batch_labels in valid_loader:
                     
                         labels = batch_labels.to(device)
-                        text = batch['input_ids'].squeeze(1).to(device)      
+                        text = batch['input_ids'].squeeze(1).to(device)    
                         output = model(text, labels)
+                        #print("output", output.logits)
+                        
 
                         logits = output.logits
                         y_pred.extend(torch.argmax(logits, 1).tolist())
                         y_true.extend(labels.tolist())
+                        #print("pred", y_pred)
+                        #print("true", y_true)
+
 
                         loss = output.loss
                         valid_running_loss += loss.item()

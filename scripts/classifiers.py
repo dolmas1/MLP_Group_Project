@@ -28,7 +28,8 @@ class Classifier(nn.Module):
         """
         super(Classifier, self).__init__()
      
-        self.loss = nn.CrossEntropyLoss(weight=torch.tensor([1., float(positive_class_weight)]))
+        #self.loss = nn.CrossEntropyLoss(weight=torch.tensor([1., float(positive_class_weight)]))
+        self.loss = nn.CrossEntropyLoss()
 
         self.config = AutoConfig.from_pretrained(embedding_model, num_labels=2, output_hidden_states=True, output_attentions=True, return_dict=True)
         self.encoder = BertForSequenceClassification.from_pretrained(embedding_model, config=self.config)
@@ -49,9 +50,10 @@ class Classifier(nn.Module):
         label.to(device)
 
         out = self.encoder(text, labels=label)
-        l = None
-        if label is not None:
-            l = self.loss(out[1], label)
+        #l = None
+        #if label is not None:
+        l = self.loss(out[1], label)
+       
         out = Attributes(logits=out[1], loss=l, hidden_states=out[2][-1][:,0], attentions=out["attentions"])
 
 

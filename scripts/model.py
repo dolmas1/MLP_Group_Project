@@ -10,10 +10,6 @@ import torch.optim as optim
 
 # Evaluation
 
-import sklearn
-from sklearn import metrics
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-
 import numpy as np
 import random
 
@@ -45,7 +41,7 @@ def set_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
 
-set_seed(0)
+set_seed(42)
 
 
 tokenizer = AutoTokenizer.from_pretrained('bert-base-cased')
@@ -64,7 +60,6 @@ def run_cl(embeddings, model, data):
         FileExistsError: if the destination path, where the model is stored, already exists
     """
 
-    #tokenizer = AutoTokenizer.from_pretrained(embeddings["tokenizer"])
     # model parameter
     epochs = model["epochs"]
     positive_class_weight = model["positive_class_weight"]
@@ -110,7 +105,7 @@ def run_cl(embeddings, model, data):
     test_dataloader = torch.utils.data.DataLoader(test_hate_data, batch_size=batch_size)
 
 
-    optimizer = optim.Adam(classifier.parameters(), lr=2e-5)
+    optimizer = optim.Adam(classifier.parameters(), lr=1e-4)
 
     logging.info("Starting Training!")
     train(model=classifier, optimizer=optimizer, train_loader = train_dataloader, valid_loader = val_dataloader, num_epochs = epochs, 
