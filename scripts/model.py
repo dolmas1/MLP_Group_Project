@@ -43,7 +43,7 @@ def set_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
 
-set_seed(42)
+
 
 
 tokenizer = AutoTokenizer.from_pretrained('bert-base-cased')
@@ -61,6 +61,8 @@ def run_cl(embeddings, model, data):
     Raises:
         FileExistsError: if the destination path, where the model is stored, already exists
     """
+    seed = model["random_seed"]
+    set_seed(seed)
 
     # model parameter
     epochs = model["epochs"]
@@ -107,7 +109,7 @@ def run_cl(embeddings, model, data):
     test_dataloader = torch.utils.data.DataLoader(test_hate_data, batch_size=batch_size)
 
 
-    optimizer = optim.Adam(classifier.parameters(), lr=1e-3)
+    optimizer = optim.Adam(classifier.parameters(), lr=1e-6)
 
     logging.info("Starting Training!")
     train(model=classifier, optimizer=optimizer, train_loader = train_dataloader, valid_loader = val_dataloader, num_epochs = epochs, 

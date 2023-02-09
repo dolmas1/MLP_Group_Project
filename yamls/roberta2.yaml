@@ -6,18 +6,18 @@ classifier:
 
   model:
   
-    epochs: 1
+    epochs: 100
     batch_size: 4
     positive_class_weight: 1
     early_stopping: 10
     random_seed: 42
 
-    destination_path: "../results/debug"                  
+    destination_path: "../results/roberta2"                  
     
   data:
     path: "../data/hatespeech"
-    train_file: "debug_train.csv"
-    dev_file: "debug_dev.csv"
-    test_file: "debug_test.csv"
+    train_file: "train.csv"
+    dev_file: "dev.csv"
+    test_file: "test.csv"
 
  

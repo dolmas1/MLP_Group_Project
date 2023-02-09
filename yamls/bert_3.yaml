@@ -1,8 +1,8 @@
 classifier:
 
   embeddings:
-    embeddings: "roberta-base"    # roberta-base or bert-base-cased
-    tokenizer: "roberta-base"     # roberta-base or bert-base-cased
+    embeddings: "bert-base-cased"    # roberta-base or bert-base-cased
+    tokenizer: "bert-base-cased"     # roberta-base or bert-base-cased
 
   model:
   
@@ -10,9 +10,9 @@ classifier:
     batch_size: 4
     positive_class_weight: 1
     early_stopping: 10
-    random_seed: 42
+    random_seed: 121
 
-    destination_path: "../results/base"                  
+    destination_path: "../results/bert3"                  
     
   data:
     path: "../data/hatespeech"

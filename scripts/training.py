@@ -36,7 +36,8 @@ def train(model,
     
     # initialize running values
 
-    eval_every = len(train_loader.dataset) // 2
+    #eval_every = len(train_loader.dataset) // 2
+    eval_every = len(train_loader) // 2
 
     running_loss = 0.0
     valid_running_loss = 0.0
@@ -65,9 +66,6 @@ def train(model,
             output = model(text, labels)
             #logits = output.logits
             #probs = F.softmax(logits, dim=1)
-            print("logits", output.logits)
-            print("pred", torch.argmax(output.logits, 1).tolist())
-            print("true", labels)
 
             loss = output.loss
 

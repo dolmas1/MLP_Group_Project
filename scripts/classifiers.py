@@ -9,8 +9,9 @@ import torch
 # Models
 
 import torch.nn as nn
-from transformers import BertForSequenceClassification
+from transformers import BertForSequenceClassification, RobertaForSequenceClassification
 from transformers import AutoTokenizer, AutoConfig
+import logging
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -32,7 +33,14 @@ class Classifier(nn.Module):
         self.loss = nn.CrossEntropyLoss()
 
         self.config = AutoConfig.from_pretrained(embedding_model, num_labels=2, output_hidden_states=True, output_attentions=True, return_dict=True)
-        self.encoder = BertForSequenceClassification.from_pretrained(embedding_model, config=self.config)
+        
+        logging.info(f"Model used: {embedding_model}")
+        if "roberta" in embedding_model:
+            self.encoder = RobertaForSequenceClassification.from_pretrained(embedding_model, config=self.config)
+        elif "bert" in embedding_model:        
+            self.encoder = BertForSequenceClassification.from_pretrained(embedding_model, config=self.config)
+        else:
+            raise Exception(f"Architecture {embedding_model} not supported!")
 
 
 

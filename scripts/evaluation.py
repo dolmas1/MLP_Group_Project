@@ -6,6 +6,8 @@ import numpy as np
 import torch.nn.functional as F
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import seaborn as sns
+import os
+from prettytable import PrettyTable
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 id2label = {0: "noHate", 1: "hate"}
@@ -26,6 +28,7 @@ def evaluate(model, test_loader, destination_path, model_name):
 
 
     model.eval()
+    
     with torch.no_grad():
         for batch, batch_labels in test_loader:
         
@@ -46,6 +49,16 @@ def evaluate(model, test_loader, destination_path, model_name):
 
     y_probs = np.array([prob[1] for prob in y_probs])
     y_true = np.array(y_true)
+
+    result_table = PrettyTable(["Probability for Hate", "Prediction", "Predicted Label"])
+    for prob, pred in zip(y_probs, y_pred):
+        result_table.add_row([round(prob, 2), id2label[pred], pred])
+    result_table.border = False
+    with open(os.path.join(destination_path, f"predictions_model_{model_name}"), "w+") as out:
+        out.write(str(result_table))
+
+        
+
 
     logging.info('Classification Report:')
     logging.info('\n' + classification_report(y_true, y_pred, labels=[1,0], digits=4))
