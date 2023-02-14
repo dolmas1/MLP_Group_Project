@@ -9,6 +9,8 @@ import seaborn as sns
 import os
 from prettytable import PrettyTable
 
+from captum.attr import LayerConductance, LayerIntegratedGradients
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 id2label = {0: "noHate", 1: "hate"}
 
@@ -33,8 +35,10 @@ def evaluate(model, test_loader, destination_path, model_name):
         for batch, batch_labels in test_loader:
         
             labels = batch_labels.to(device)
-            text = batch['input_ids'].squeeze(1).to(device)      
+            text = batch['input_ids'].squeeze(1).to(device) 
+
             output = model(text, labels)
+
 
             logits = output.logits
             probs = F.softmax(logits, dim=1)
@@ -50,9 +54,9 @@ def evaluate(model, test_loader, destination_path, model_name):
     y_probs = np.array([prob[1] for prob in y_probs])
     y_true = np.array(y_true)
 
-    result_table = PrettyTable(["Probability for Hate", "Prediction", "Predicted Label"])
+    result_table = PrettyTable(["Tokens", "Lime", "Shap", "Integrated Gradients", "Probability for Hate", "Prediction", "Predicted Label"])
     for prob, pred in zip(y_probs, y_pred):
-        result_table.add_row([round(prob, 2), id2label[pred], pred])
+        result_table.add_row(["", "", "", "", round(prob, 2), id2label[pred], pred])
     result_table.border = False
     with open(os.path.join(destination_path, f"predictions_model_{model_name}"), "w+") as out:
         out.write(str(result_table))
