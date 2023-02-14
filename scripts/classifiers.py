@@ -31,20 +31,21 @@ class Classifier(nn.Module):
      
         #self.loss = nn.CrossEntropyLoss(weight=torch.tensor([1., float(positive_class_weight)]))
         self.loss = nn.CrossEntropyLoss()
-
         self.config = AutoConfig.from_pretrained(embedding_model, num_labels=2, output_hidden_states=True, output_attentions=True, return_dict=True)
         
         logging.info(f"Model used: {embedding_model}")
         if "roberta" in embedding_model:
             self.encoder = RobertaForSequenceClassification.from_pretrained(embedding_model, config=self.config)
+
         elif "bert" in embedding_model:        
             self.encoder = BertForSequenceClassification.from_pretrained(embedding_model, config=self.config)
+
         else:
             raise Exception(f"Architecture {embedding_model} not supported!")
 
 
 
-    def forward(self, text, label=None):
+    def forward(self, text, label=None, lig=False):
         """Forward pass of the model of a given text.
 
         Args:
@@ -54,6 +55,10 @@ class Classifier(nn.Module):
         Returns:
             out (Attributes): Attributes wrapper class with information important for further processing
         """
+        if lig:
+            text.to(device)
+            return self.encoder(text, labels=label)
+
         text.to(device)
         label.to(device)
 
