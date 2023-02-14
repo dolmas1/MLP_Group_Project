@@ -22,6 +22,11 @@ from plot_loss import plot_loss
 from checkpoints import load_checkpoint
 from evaluation import evaluate
 
+
+# integrated gradients
+
+
+
 # Cuda
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # print("DEVICE USED: ", device)
@@ -134,12 +139,12 @@ def run_cl(embeddings, model, data, only_test=False):
         best_model_acc = Classifier(embeds, positive_class_weight).to(device)
 
         load_checkpoint(acc_checkpoint, best_model_acc)
-        evaluate(best_model_acc, test_dataloader, destination_path, "best_acc")
+        evaluate(best_model_acc, test_dataloader, destination_path, "best_acc", tokenizer)
     
         logging.info("\nEvaluation Model with best LOSS")
         best_model_loss = Classifier(embeds, positive_class_weight).to(device)
         load_checkpoint(loss_checkpoint, best_model_loss)
-        evaluate(best_model_loss, test_dataloader, destination_path, "best_loss")
+        evaluate(best_model_loss, test_dataloader, destination_path, "best_loss", tokenizer)
 
     else:
         logging.info("Only testing, no training!")
@@ -147,6 +152,6 @@ def run_cl(embeddings, model, data, only_test=False):
         loaded_model = Classifier(embeds, positive_class_weight).to(device)
 
         load_checkpoint(parameter_path, loaded_model)
-        evaluate(loaded_model, test_dataloader, destination_path, "loaded_model")
+        evaluate(loaded_model, test_dataloader, destination_path, "loaded_model", tokenizer)
 
     logging.info("\nGoodbye :)")

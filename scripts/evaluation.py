@@ -15,7 +15,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 id2label = {0: "noHate", 1: "hate"}
 
 # Evaluation Function
-def evaluate(model, test_loader, destination_path, model_name):
+def evaluate(model, test_loader, destination_path, model_name, tokenizer):
     """Evaluation function for testing purposes.
 
     Args:
@@ -32,10 +32,15 @@ def evaluate(model, test_loader, destination_path, model_name):
     model.eval()
     
     with torch.no_grad():
+        batch_tokens = []
         for batch, batch_labels in test_loader:
         
             labels = batch_labels.to(device)
             text = batch['input_ids'].squeeze(1).to(device) 
+
+            for example in range(len(text)):
+                batch_tokens.append([tok.replace("Ġ", "") for tok in tokenizer.convert_ids_to_tokens(text[example]) if tok != tokenizer.pad_token])
+            
 
             output = model(text, labels)
 
@@ -55,9 +60,10 @@ def evaluate(model, test_loader, destination_path, model_name):
     y_true = np.array(y_true)
 
     result_table = PrettyTable(["Tokens", "Lime", "Shap", "Integrated Gradients", "Probability for Hate", "Prediction", "Predicted Label"])
-    for prob, pred in zip(y_probs, y_pred):
-        result_table.add_row(["", "", "", "", round(prob, 2), id2label[pred], pred])
+    for tok, prob, pred in zip(batch_tokens, y_probs, y_pred):
+        result_table.add_row([tok, "", "", "", round(prob, 2), id2label[pred], pred])
     result_table.border = False
+    result_table.align = "l"
     with open(os.path.join(destination_path, f"predictions_model_{model_name}"), "w+") as out:
         out.write(str(result_table))
 
