@@ -5,6 +5,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('yaml_path', metavar='path', type=str, help='path to yaml file (embeddings)')
+parser.add_argument("test", help="only test the model without training", nargs='?', type=bool, default=False)
 args = parser.parse_args()
 
 
@@ -13,8 +14,9 @@ def main():
     """
     with open(args.yaml_path) as y:
         conf = yaml.load(y.read(), Loader=yaml.FullLoader)
+        only_test = args.test
 
-        run_cl(**conf["classifier"])
+        run_cl(**conf["classifier"], only_test=only_test)
 
 
 if __name__ == "__main__":

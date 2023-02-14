@@ -48,7 +48,7 @@ def set_seed(seed):
 
 tokenizer = AutoTokenizer.from_pretrained('bert-base-cased')
 
-def run_cl(embeddings, model, data):
+def run_cl(embeddings, model, data, only_test=False):
     """Main function that runs the classifier model, trains and evaluates it.
 
     Args:
@@ -61,6 +61,7 @@ def run_cl(embeddings, model, data):
     Raises:
         FileExistsError: if the destination path, where the model is stored, already exists
     """
+
     seed = model["random_seed"]
     set_seed(seed)
 
@@ -84,9 +85,15 @@ def run_cl(embeddings, model, data):
             )
     logging.info("Welcome :)\n")
     logging.info(f"Device used: {device}\n")
+
     # pretrained models
     embeds = embeddings["embeddings"]
     tok = embeddings["tokenizer"]
+    if only_test:
+        try:
+            parameter_path = embeddings["load_from"]
+        except:
+            raise Exception("No path specified to load model from!")
 
 
     # model and tokenizer
@@ -111,27 +118,35 @@ def run_cl(embeddings, model, data):
 
     optimizer = optim.Adam(classifier.parameters(), lr=1e-6)
 
-    logging.info("Starting Training!")
-    train(model=classifier, optimizer=optimizer, train_loader = train_dataloader, valid_loader = val_dataloader, num_epochs = epochs, 
-            file_path = destination_path, early_stopping = early_stopping)
-    logging.info("Finished Training!\n")
+    if not only_test: 
+        logging.info("Starting Training!")
+        train(model=classifier, optimizer=optimizer, train_loader = train_dataloader, valid_loader = val_dataloader, num_epochs = epochs, 
+                file_path = destination_path, early_stopping = early_stopping)
+        logging.info("Finished Training!\n")
 
+        # Evaluation
+        plot_loss(destination_path, "metrics.pt")
 
+        acc_checkpoint = os.path.join(destination_path, "model_best_acc.pt")
+        loss_checkpoint = os.path.join(destination_path, "model_best_loss.pt")
 
-    # Evaluation
-    plot_loss(destination_path, "metrics.pt")
+        logging.info("\nEvaluation Model with best ACC")
+        best_model_acc = Classifier(embeds, positive_class_weight).to(device)
 
-    acc_checkpoint = os.path.join(destination_path, "model_best_acc.pt")
-    loss_checkpoint = os.path.join(destination_path, "model_best_loss.pt")
+        load_checkpoint(acc_checkpoint, best_model_acc)
+        evaluate(best_model_acc, test_dataloader, destination_path, "best_acc")
+    
+        logging.info("\nEvaluation Model with best LOSS")
+        best_model_loss = Classifier(embeds, positive_class_weight).to(device)
+        load_checkpoint(loss_checkpoint, best_model_loss)
+        evaluate(best_model_loss, test_dataloader, destination_path, "best_loss")
 
-    logging.info("\nEvaluation Model with best ACC")
-    best_model_acc = Classifier(embeds, positive_class_weight).to(device)
+    else:
+        logging.info("Only testing, no training!")
+        logging.info("Loading Model")
+        loaded_model = Classifier(embeds, positive_class_weight).to(device)
 
-    load_checkpoint(acc_checkpoint, best_model_acc)
-    evaluate(best_model_acc, test_dataloader, destination_path, "best_acc")
- 
-    logging.info("\nEvaluation Model with best LOSS")
-    best_model_loss = Classifier(embeds, positive_class_weight).to(device)
-    load_checkpoint(loss_checkpoint, best_model_loss)
-    evaluate(best_model_loss, test_dataloader, destination_path, "best_loss")
+        load_checkpoint(parameter_path, loaded_model)
+        evaluate(loaded_model, test_dataloader, destination_path, "loaded_model")
+
     logging.info("\nGoodbye :)")
