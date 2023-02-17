@@ -1,8 +1,8 @@
 classifier:
 
   embeddings:
-    embeddings: "roberta-base"    # roberta-base or bert-base-cased or prajjwal1/bert-medium
-    tokenizer: "roberta-base"     # roberta-base or bert-base-cased or prajjwal1/bert-medium
+    embeddings: "prajjwal1/bert-medium"    # roberta-base or bert-base-cased or prajjwal1/bert-medium
+    tokenizer: "prajjwal1/bert-medium"     # roberta-base or bert-base-cased or prajjwal1/bert-medium
 
   model:
   
@@ -12,7 +12,7 @@ classifier:
     early_stopping: 10
     random_seed: 934
 
-    destination_path: "../results/roberta4"
+    destination_path: "../results/bert_medium4"
     
   data:
     path: "../data/hatespeech"
