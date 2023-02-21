@@ -33,7 +33,7 @@ def get_integrated_gradients_score(text, labels, tokens, tokenizer, model, model
 
         attributions_sum = attributions.sum(dim=-1).squeeze(0)
         normed_attributions_sum = attributions_sum / torch.norm(attributions_sum)
-        attributions_list.append(normed_attributions_sum)
+        attributions_list.append(normed_attributions_sum.tolist())
 
     return attributions_list
 
