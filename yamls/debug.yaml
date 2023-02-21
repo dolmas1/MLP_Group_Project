@@ -1,18 +1,18 @@
 classifier:
 
   embeddings:
-    embeddings: "roberta-base"    # roberta-base or bert-base-cased
-    tokenizer: "roberta-base"     # roberta-base or bert-base-cased
+    load_from: "../results/debug2/model_best_acc.pt"
+    embeddings: "roberta-base"                           # roberta-base or bert-base-cased
+    tokenizer: "roberta-base"                            # roberta-base or bert-base-cased
 
   model:
-  
     epochs: 1
     batch_size: 4
     positive_class_weight: 1
     early_stopping: 10
     random_seed: 42
 
-    destination_path: "../results/debug"                  
+    destination_path: "../results/debug_roberta"                  
     
   data:
     path: "../data/hatespeech"
