@@ -41,9 +41,6 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
 
             output = model(text, labels)
 
-            
-            
-
             logits = output.logits
             probs = F.softmax(logits, dim=1)
 

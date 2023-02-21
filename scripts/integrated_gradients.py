@@ -8,9 +8,12 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 def get_integrated_gradients_score(text, labels, tokens, tokenizer, model, model_name):
 
     attributions_list = []
+    
     def model_output(inputs):
         m_output = model(inputs, lig=True)
         return m_output[0]
+    
+
     if "roberta" in model_name:
         lig = LayerIntegratedGradients(model_output, model.encoder.roberta.embeddings)
 

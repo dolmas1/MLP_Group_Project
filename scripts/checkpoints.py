@@ -39,9 +39,12 @@ def load_checkpoint(load_path, model):
         return
     
     state_dict = torch.load(load_path, map_location=device)
+
     logging.info(f'Model loaded from <== {load_path}')
     
     model.load_state_dict(state_dict['model_state_dict'])
     return state_dict['valid_loss']
+
+
 
 
