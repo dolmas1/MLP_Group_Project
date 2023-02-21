@@ -8,6 +8,8 @@ from transformers import AutoTokenizer
 from transformers import logging as transformers_logging
 import torch.optim as optim
 
+
+
 # Evaluation
 
 import numpy as np
@@ -16,14 +18,11 @@ import random
 # import other scripts
 
 from classifiers import Classifier
-from datasets import HateSpeech
+from datasets import HateSpeech, CoLA
 from training import train
 from plot_loss import plot_loss
 from checkpoints import load_checkpoint
 from evaluation import evaluate
-
-
-# integrated gradients
 
 
 
@@ -32,7 +31,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # print("DEVICE USED: ", device)
 
 
-label2id = {"noHate":0, "hate":1}
 transformers_logging.set_verbosity_error()
 
 # deterministic behaviour
@@ -112,13 +110,27 @@ def run_cl(embeddings, model, data, only_test=False):
     test_file = data["test_file"]
 
     # load data
-    train_hate_data = HateSpeech(root_dir=path, label_file=train_file, tokenizer=tokenizer)
-    dev_hate_data = HateSpeech(root_dir=path, label_file=dev_file, tokenizer=tokenizer)
-    test_hate_data = HateSpeech(root_dir=path, label_file=test_file, tokenizer=tokenizer)
 
-    train_dataloader = torch.utils.data.DataLoader(train_hate_data, batch_size=batch_size, shuffle=True)
-    val_dataloader = torch.utils.data.DataLoader(dev_hate_data, batch_size=batch_size)
-    test_dataloader = torch.utils.data.DataLoader(test_hate_data, batch_size=batch_size)
+    if "hate" in path:
+        train_hate_data = HateSpeech(root_dir=path, label_file=train_file, tokenizer=tokenizer)
+        dev_hate_data = HateSpeech(root_dir=path, label_file=dev_file, tokenizer=tokenizer)
+        test_hate_data = HateSpeech(root_dir=path, label_file=test_file, tokenizer=tokenizer)
+
+
+        train_dataloader = torch.utils.data.DataLoader(train_hate_data, batch_size=batch_size, shuffle=True)
+        val_dataloader = torch.utils.data.DataLoader(dev_hate_data, batch_size=batch_size)
+        test_dataloader = torch.utils.data.DataLoader(test_hate_data, batch_size=batch_size)
+    
+    elif "cola" in path:
+        train_cola_data = CoLA(root_dir=path, label_file=train_file, tokenizer=tokenizer)
+        dev_cola_data = CoLA(root_dir=path, label_file=dev_file, tokenizer=tokenizer)
+        test_cola_data = CoLA(root_dir=path, label_file=test_file, tokenizer=tokenizer)
+
+
+        train_dataloader = torch.utils.data.DataLoader(train_cola_data, batch_size=batch_size, shuffle=True)
+        val_dataloader = torch.utils.data.DataLoader(dev_cola_data, batch_size=batch_size)
+        test_dataloader = torch.utils.data.DataLoader(test_cola_data, batch_size=batch_size)
+
 
 
     optimizer = optim.Adam(classifier.parameters(), lr=1e-6)
