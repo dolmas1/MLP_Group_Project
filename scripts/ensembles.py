@@ -120,6 +120,7 @@ def run_ensemble(constituent_models, data, ensemble_details):
     test_dataloaders = [torch.utils.data.DataLoader(test_data, batch_size=batch_size) for test_data in test_data_arr]
         
     evaluate_ensemble(constituent_models = loaded_models,
+                      constituent_model_names = [model['model_name'] for model in constituent_models],
                       test_loaders = test_dataloaders,
                       destination_path = destination_path,
                       model_name = "ensemble_model",

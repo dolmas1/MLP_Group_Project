@@ -63,11 +63,13 @@ constituent_models:
   - load_from: "../results/debug_bert-medium/model_best_acc.pt"   # path to a trained model you want to include (include the full .pt filename, not just the path!)
     embeddings: "prajjwal1/bert-medium"                           # roberta-base or bert-base-cased or prajjwal1/bert-medium
     tokenizer: "prajjwal1/bert-medium"                            # roberta-base or bert-base-cased or prajjwal1/bert-medium
+    model_name: "bert_medium_rand_1"                              # string to identify the name of this model (as multiple constituent models of same type may be included, we need to distinguish between them)
     positive_class_weight: 1
     
   - load_from: "../results/debug_roberta/model_best_acc.pt"
     embeddings: "roberta-base"
     tokenizer: "roberta-base"
+    model_name: "roberta_rand_1"
     positive_class_weight: 1
 
 ensemble_details:
@@ -114,13 +116,17 @@ python run.py ../yamls/ensemble_debug.yaml
 ├── requirements.txt
 ├── results
 ├── scripts
+│   ├── attention.py
 │   ├── checkpoints.py
 │   ├── classifiers.py
 │   ├── datasets.py
+│   ├── ensembles.py
 │   ├── evaluation.py
+│   ├── integrated_gradients.py
 │   ├── load_safe_metrics.py
 │   ├── model.py
 │   ├── plot_loss.py
+│   ├── run_ensemble.py
 │   ├── run.py
 │   └── training.py
 ├── split_data.py
