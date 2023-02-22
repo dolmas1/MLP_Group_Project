@@ -2,8 +2,8 @@ classifier:
 
   embeddings:
     load_from: "../results/debug2/model_best_acc.pt"
-    embeddings: "roberta-base"                           # roberta-base or bert-base-cased
-    tokenizer: "roberta-base"                            # roberta-base or bert-base-cased
+    embeddings: "prajjwal1/bert-medium"                           # roberta-base or bert-base-cased or prajjwal1/bert-medium
+    tokenizer: "prajjwal1/bert-medium"                            # roberta-base or bert-base-cased or prajjwal1/bert-medium
 
   model:
     epochs: 1
@@ -12,7 +12,7 @@ classifier:
     early_stopping: 10
     random_seed: 42
 
-    destination_path: "../results/debug_roberta"                  
+    destination_path: "../results/debug_bert-medium"
     
   data:
     path: "../data/hatespeech"

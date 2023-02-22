@@ -54,7 +54,8 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
                 tokens.append(toks)
             
             # attention scores
-            attention_scores +=  get_attention_scores(batch['attention_mask'], output.attentions)
+            attention_mask = batch['attention_mask'].to(device)
+            attention_scores +=  get_attention_scores(attention_mask, output.attentions)
 
             # layerwise integrated gradient
             lig_scores += get_integrated_gradients_score(text, labels, tokens, tokenizer, model, model_type)
