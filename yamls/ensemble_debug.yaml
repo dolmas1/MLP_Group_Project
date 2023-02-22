@@ -1,5 +1,5 @@
 constituent_models:
-  - load_from: "../results/debug_bert-medium/model_best_acc.pt"   # path to a trained model you want to include
+  - load_from: "../results/debug_bert-medium/model_best_acc.pt"   # path to a trained model you want to include (include the full .pt filename, not just the path!)
     embeddings: "prajjwal1/bert-medium"                           # roberta-base or bert-base-cased or prajjwal1/bert-medium
     tokenizer: "prajjwal1/bert-medium"                            # roberta-base or bert-base-cased or prajjwal1/bert-medium
     positive_class_weight: 1
