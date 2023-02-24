@@ -93,7 +93,7 @@ python run_ensemble.py ../yamls/<your_yaml.yaml>
 ```
 for example 
 ```
-python run.py ../yamls/ensemble_debug.yaml
+python run_ensemble.py ../yamls/ensemble_debug.yaml
 ```
 
 

@@ -3,6 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
+import pandas as pd
 import torch.nn.functional as F
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import seaborn as sns
@@ -122,86 +123,140 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
                                'latent': for each model_type category, get avg latent embedding of test examples according to constituent models in that category. Build new classifier on resultant embeddings. Then run inference, and majority vote.
                                'inter': interpretability weighted ensemble (details TBC)
     """
-    # For now, evaluate the first model only (will implement proper ensemble methods in next commit)
-    model = constituent_models[0]
-    tokenizer = tokenizers[0]
-    model_type = model_types[0]
-    test_loader = test_loaders[0]
-    # end
-    
-    y_pred = []; y_true = []; y_probs = []
-    batch_tokens = []
-    lig_scores = []; attention_scores = []
+    if ensemble_method in ['majority', 'inter']:
 
-    model.eval()
-    
-    
-    with torch.no_grad():
-        
-        for batch, batch_labels in test_loader:
-        
-            labels = batch_labels.to(device)
-            text = batch['input_ids'].squeeze(1).to(device) 
+        model_id = []; test_obs_idx = []
+        y_pred = []; y_true = []; y_probs = []
+        batch_tokens = []
+        lig_scores = []; attention_scores = []
 
+        num_models = len(constituent_models)
 
-            output = model(text, labels)
+        # loop through constituent models
+        for i in range(num_models):
+            model = constituent_models[i]
+            constituent_model_name = constituent_model_names[i]
+            tokenizer = tokenizers[i]
+            model_type = model_types[i]
+            test_loader = test_loaders[i]
 
-            logits = output.logits
-            probs = F.softmax(logits, dim=1)
+            with torch.no_grad():
 
-            # gets tokens for printing in file
-            tokens = []
-            for example in range(len(text)):
-                toks = [tok for tok in tokenizer.convert_ids_to_tokens(text[example]) if tok != tokenizer.pad_token]
-                batch_tokens.append(toks)
-                tokens.append(toks)
-            
-            # attention scores
-            attention_mask = batch['attention_mask'].to(device)
-            attention_scores +=  get_attention_scores(attention_mask, output.attentions)
+                for batch, batch_labels in test_loader:
 
-            # layerwise integrated gradient
-            lig_scores += get_integrated_gradients_score(text, labels, tokens, tokenizer, model, model_type)
+                    labels = batch_labels.to(device)
+                    text = batch['input_ids'].squeeze(1).to(device)
 
+                    output = model(text, labels)
 
+                    logits = output.logits
+                    probs = F.softmax(logits, dim=1)
 
-            y_probs.extend(probs.tolist())
-            y_pred.extend(torch.argmax(logits, 1).tolist())
-            y_true.extend(labels.tolist())
+                    # gets tokens for printing in file
+                    tokens = []
+                    for example in range(len(text)):
+                        toks = [tok for tok in tokenizer.convert_ids_to_tokens(text[example]) if tok != tokenizer.pad_token]
+                        batch_tokens.append(toks)
+                        tokens.append(toks)
 
+                    # attention scores
+                    attention_mask = batch['attention_mask'].to(device)
+                    attention_scores +=  get_attention_scores(attention_mask, output.attentions)
 
-    y_probs = np.array([prob[1] for prob in y_probs])
-    y_true = np.array(y_true)
+                    # layerwise integrated gradient
+                    lig_scores += get_integrated_gradients_score(text, labels, tokens, tokenizer, model, model_type)
 
-    result_table = PrettyTable(["Tokens", "Lime", "Shap", "Attention", "Integrated Gradients", "Probability for Hate", "Predicted Label"])
-    for tok, att, lig, prob, pred in zip(batch_tokens, attention_scores, lig_scores, y_probs, y_pred):
-        result_table.add_row([tok, "", "",att,  lig, round(prob, 2),  pred])
-    result_table.border = False
-    result_table.align = "l"
-    with open(os.path.join(destination_path, f"predictions_model_{model_name}.csv"), "w+") as csv_out:
-        csv_out.write(result_table.get_csv_string())
-    with open(os.path.join(destination_path, f"predictions_model_{model_name}.txt"), "w+") as txt_out:
-        txt_out.write(str(result_table))
+                    # LIME
+                    ### ADD THIS HERE
 
-        
+                    # SHAP
+                    ### ADD THIS HERE
+
+                    y_probs.extend(probs.tolist())
+                    y_pred.extend(torch.argmax(logits, 1).tolist())
+                    y_true.extend(labels.tolist())
+
+                    model_id.extend(len(labels) * [constituent_model_name])
 
 
-    logging.info('Classification Report:')
-    logging.info('\n' + classification_report(y_true, y_pred, labels=[1,0], digits=4))
-    tp, fn, fp, tn = confusion_matrix(y_true, y_pred, labels=[1,0]).ravel()
-    logging.info(f"True Positives: {tp}")
-    logging.info(f"False Positives: {fp}")
-    logging.info(f"True Negatives: {tn}")
-    logging.info(f"False Negatives {fn}")
+        # collect constituent model predictions, save to csv
+        y_probs = np.array([prob[1] for prob in y_probs])
+        y_true = np.array(y_true)
+
+        test_obs_idx.extend(num_models * list(range(int(len(y_true) / num_models))))
+
+        result_table = pd.DataFrame({"Model_id": model_id,
+                                     "Test_example": test_obs_idx,
+                                     "Tokens": batch_tokens,
+                                     #"Lime":
+                                     #"Shap":
+                                     "Attention": attention_scores,
+                                     "Integrated Gradients": lig_scores,
+                                     "Probability for Hate": y_probs,
+                                     "Predicted Label": y_pred,
+                                     "True Label": y_true})
+        result_table.to_csv(os.path.join(destination_path, f"all_constituent_predictions_{model_name}.csv"), index = False)
+
+        # combine the predictions
+        if ensemble_method == 'majority':
+
+            # save majority vote predictions
+            ensemble_preds = pd.DataFrame({'Test_example': result_table['Test_example'][:int(len(y_true) / num_models)],
+                                       'Ensemble_pred': result_table.groupby('Test_example')['Predicted Label'].agg(lambda x: pd.Series.mode(x)[0]),
+                                       'True_label': result_table.groupby('Test_example')['True Label'].agg(lambda x: pd.Series.mode(x)[0])})
+            ensemble_preds.to_csv(os.path.join(destination_path, f"ensemble_predictions_{model_name}.csv"), index = False)
 
 
-    cm = confusion_matrix(y_true, y_pred, labels=[1,0])
-    ax = plt.subplot()
-    sns.heatmap(cm, annot=True, ax = ax, cmap='Blues', fmt="d")
-    ax.set_title('Confusion Matrix')
-    ax.set_xlabel('Predicted Labels')
-    ax.set_ylabel('True Labels')
-    ax.xaxis.set_ticklabels(['HATE', 'NO-HATE'])
-    ax.yaxis.set_ticklabels(['HATE', 'NO-HATE'])
-    plt.savefig(os.path.join(destination_path, f"{model_name}_heatmap.png"))
-    plt.close()
+        elif ensemble_method == 'inter':
+            ## TO DO: IMPLEMENT THIS METHOD ##
+            # (make sures this code block returns ensemble_preds dataframe as above)
+            raise NotImplementedError
+
+
+        # Calculate and save ensemble metrics
+        y_true = np.array(ensemble_preds['True_label'])
+        y_pred = np.array(ensemble_preds['Ensemble_pred'])
+
+        logging.info('Classification Report:')
+        logging.info('\n' + classification_report(y_true, y_pred, labels=[1,0], digits=4))
+        tp, fn, fp, tn = confusion_matrix(y_true, y_pred, labels=[1,0]).ravel()
+        logging.info(f"True Positives: {tp}")
+        logging.info(f"False Positives: {fp}")
+        logging.info(f"True Negatives: {tn}")
+        logging.info(f"False Negatives {fn}")
+
+        precision = tp / (tp + fp)
+        recall = tp / (tp + fn)
+        f1_score = 2 * tp / (2*tp + fp + fn)
+        accuracy = (tp + tn) / (tp + tn + fp + fn)
+        print(f'precision = {round(100 * precision, 2)}')
+        print(f'recall = {round(100 * recall, 2)}')
+        print(f'f1_score = {round(100 * f1_score, 2)}')
+        print(f'accuracy = {round(100 * accuracy, 2)}')
+
+        ensemble_metrics_table = PrettyTable(["Precision", "Recall", "F1_Score", "Accuracy"])
+        ensemble_metrics_table.add_row([round(100 * precision, 2), round(100 * recall, 2), round(100 * f1_score, 2), round(100 * accuracy, 2)])
+
+        with open(os.path.join(destination_path, f"metrics_{model_name}.txt"), "w+") as txt_out:
+            txt_out.write(str(ensemble_metrics_table))
+
+        cm = confusion_matrix(y_true, y_pred, labels=[1,0])
+        ax = plt.subplot()
+        sns.heatmap(cm, annot=True, ax = ax, cmap='Blues', fmt="d")
+        ax.set_title('Confusion Matrix')
+        ax.set_xlabel('Predicted Labels')
+        ax.set_ylabel('True Labels')
+        ax.xaxis.set_ticklabels(['HATE', 'NO-HATE'])
+        ax.yaxis.set_ticklabels(['HATE', 'NO-HATE'])
+        plt.savefig(os.path.join(destination_path, f"{model_name}_heatmap.png"))
+        plt.close()
+
+    elif ensemble_method in ['wt_avg', 'latent']:
+
+        ## TO DO: IMPLEMENT THIS METHOD ##
+        # create dict of model types, loop through this:
+            # use single dataloader for each model type
+            # loop through constituent models for each dataloader
+            # create final model for each model type
+        # then send reulting set of models to evaluate_ensemble('majority')
+        raise NotImplementedError
