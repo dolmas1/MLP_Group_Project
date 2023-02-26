@@ -251,12 +251,64 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
         plt.savefig(os.path.join(destination_path, f"{model_name}_heatmap.png"))
         plt.close()
 
-    elif ensemble_method in ['wt_avg', 'latent']:
+    elif ensemble_method in ['wt_avg']:
+
+        # we will construct a single (wt avg) model for each architecture type:
+        wt_avg_model_types = list(set(model_types))
+        wt_avg_tokenizers = []
+        wt_avg_test_loaders = []
+        wt_avg_constituent_models = []
+        wt_avg_constituent_model_names = []
+
+        # Loop through each architecture:
+        for mt in wt_avg_model_types:
+
+            idx_same_type = np.where(np.array(model_types) == mt)[0]
+
+            # Pick a tokenizer/test loader (these shouldn't vary across models of same type)
+            wt_avg_tokenizers.append(tokenizers[idx_same_type[0]])
+            wt_avg_test_loaders.append(test_loaders[idx_same_type[0]])
+            wt_avg_constituent_model_names.append(f"wt_avg_{mt}")
+
+            # Consider the set of constituent models with this architecture
+            models_to_avg = list(np.array(constituent_models)[idx_same_type]).copy()
+            num_models = len(models_to_avg)
+            scale_factor = 1. / num_models
+            wt_dicts = [dict(m.named_parameters()) for m in models_to_avg]
+
+            # begin with taking the weights from a single model
+            avg_wt_dict = wt_dicts[0].copy()
+
+            # for every weight matrix:
+            for wt_name in avg_wt_dict.keys():
+
+                # initialise with scaled weights from first model
+                avg_wt_dict[wt_name].data.copy_(scale_factor * wt_dicts[0][wt_name].data)
+
+                # add scaled weights from every other model
+                for wt in wt_dicts[1:]:
+                    avg_wt_dict[wt_name].data.copy_(avg_wt_dict[wt_name].data + scale_factor * wt[wt_name].data)
+
+            # finalise the model weights
+            models_to_avg[0].load_state_dict(avg_wt_dict, strict=False)
+            wt_avg_constituent_models.append(models_to_avg[0])
+
+
+            logging.info(f"Finished constructing wt_avg model for {mt}")
+            
+        logging.info(f"Finished constructing all required wt_avg models, now sending to second stage (majority voting)")
+        # then send reulting set of models to evaluate_ensemble('majority')
+        evaluate_ensemble(constituent_models = wt_avg_constituent_models,
+                          constituent_model_names = wt_avg_constituent_model_names,
+                          test_loaders = wt_avg_test_loaders,
+                          destination_path = destination_path,
+                          model_name = "ensemble_model",
+                          tokenizers = wt_avg_tokenizers,
+                          model_types = wt_avg_model_types,
+                          ensemble_method = 'majority')
+
+    elif ensemble_method in ['latent']:
 
         ## TO DO: IMPLEMENT THIS METHOD ##
-        # create dict of model types, loop through this:
-            # use single dataloader for each model type
-            # loop through constituent models for each dataloader
-            # create final model for each model type
-        # then send reulting set of models to evaluate_ensemble('majority')
+        # add to the 'wt_avg' code block when ready, method is similar
         raise NotImplementedError

@@ -1,0 +1,45 @@
+INFO:root:Welcome :)
+
+INFO:root:Device used: cuda:0
+
+INFO:root:Only testing, no training!
+INFO:root:Loading 9 Constituent models
+INFO:root:Model used: prajjwal1/bert-medium
+INFO:root:Model used: prajjwal1/bert-medium
+INFO:root:Model used: prajjwal1/bert-medium
+INFO:root:Model used: roberta-base
+INFO:root:Model used: roberta-base
+INFO:root:Model used: roberta-base
+INFO:root:Model used: bert-base-cased
+INFO:root:Model used: bert-base-cased
+INFO:root:Model used: bert-base-cased
+INFO:root:Model loaded from <== ../results/bert_medium1/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert_medium2/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert_medium3/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/roberta1/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/roberta2/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/roberta3/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert1/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert2/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert3/model_best_acc.pt
+INFO:root:Finished constructing wt_avg model for prajjwal1/bert-medium
+INFO:root:Finished constructing wt_avg model for bert-base-cased
+INFO:root:Finished constructing wt_avg model for roberta-base
+INFO:root:Finished constructing all required wt_avg models, now sending to second stage (majority voting)
+INFO:root:Classification Report:
+INFO:root:
+              precision    recall  f1-score   support
+
+           1     0.8667    0.4370    0.5810       119
+           0     0.6257    0.9333    0.7492       120
+
+    accuracy                         0.6862       239
+   macro avg     0.7462    0.6852    0.6651       239
+weighted avg     0.7457    0.6862    0.6654       239
+
+INFO:root:True Positives: 52
+INFO:root:False Positives: 8
+INFO:root:True Negatives: 112
+INFO:root:False Negatives 67
+INFO:root:
+Goodbye :)
