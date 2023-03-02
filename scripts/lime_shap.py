@@ -23,7 +23,13 @@ def get_lime_scores(model, text, tokenizer):
     class_names = ['negative', 'positive']
 
     def predictor(input_string):
-        outputs = model(**tokenizer(input_string, return_tensors="pt", padding=True))
+
+        new_input_string = []
+        for i in input_string:
+            s = i.replace("Ġ", "").replace("##", "")
+            new_input_string.append(s)
+
+        outputs = model(**tokenizer(new_input_string, return_tensors="pt", padding=True))
         tensor_logits = outputs[0]
         probas = F.softmax(tensor_logits, dim=1).detach().numpy()
         return probas
@@ -32,7 +38,7 @@ def get_lime_scores(model, text, tokenizer):
 
     explainer = LimeTextExplainer(class_names=class_names)
 
-    for t in text[1:]:
+    for t in text:
         tokens = [tok for tok in tokenizer.convert_ids_to_tokens(t) if tok not in [tokenizer.pad_token, tokenizer.cls_token, tokenizer.sep_token]]
         t = " ".join(tokens)
         exp = explainer.explain_instance(t, predictor, num_features=len(tokens), num_samples=2000)
@@ -42,5 +48,6 @@ def get_lime_scores(model, text, tokenizer):
             scores[s[0]] = s[1]
 
         lime_scores.append([0] + scores + [0])
+
 
     return lime_scores
