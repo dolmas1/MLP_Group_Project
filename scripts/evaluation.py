@@ -7,13 +7,14 @@ import pandas as pd
 import torch.nn.functional as F
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import seaborn as sns
-import os
+import re
 from prettytable import PrettyTable
 
 
 from integrated_gradients import get_integrated_gradients_score
 from attention import get_attention_scores
 from lime_shap import get_shap_scores, get_lime_scores
+from detokenize import detokenize_single, force_agreement
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 id2label = {0: "noHate", 1: "hate"}
@@ -136,7 +137,7 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
         model_id = []; test_obs_idx = []
         y_pred = []; y_true = []; y_probs = []
         batch_tokens = []
-        lig_scores = []; attention_scores = []
+        lig_scores = []; attention_scores = []; shap_scores = []; lime_scores = []
 
         num_models = len(constituent_models)
 
@@ -173,7 +174,13 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
 
                     # layerwise integrated gradient
                     lig_scores += get_integrated_gradients_score(text, labels, tokens, tokenizer, model, model_type)
+                    
+                    # lime scores
+                    lime_scores += get_lime_scores(model, text, tokenizer)
 
+                    # shap scores
+                    shap_scores += get_shap_scores(model, text, tokenizer)
+                    
 
                     y_probs.extend(probs.tolist())
                     y_pred.extend(torch.argmax(logits, 1).tolist())
@@ -182,7 +189,7 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
                     model_id.extend(len(labels) * [constituent_model_name])
 
 
-        # collect constituent model predictions, save to csv
+        # collect constituent model predictions, produce csv
         y_probs = np.array([prob[1] for prob in y_probs])
         y_true = np.array(y_true)
 
@@ -191,17 +198,19 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
         result_table = pd.DataFrame({"Model_id": model_id,
                                      "Test_example": test_obs_idx,
                                      "Tokens": batch_tokens,
-                                     #"Lime":
-                                     #"Shap":
+                                     "Lime": lime_scores,
+                                     "Shap": shap_scores,
                                      "Attention": attention_scores,
                                      "Integrated Gradients": lig_scores,
                                      "Probability for Hate": y_probs,
                                      "Predicted Label": y_pred,
                                      "True Label": y_true})
-        result_table.to_csv(os.path.join(destination_path, f"all_constituent_predictions_{model_name}.csv"), index = False)
+        
 
         # combine the predictions
         if ensemble_method == 'majority':
+
+            result_table.to_csv(os.path.join(destination_path, f"all_constituent_predictions_{model_name}.csv"), index = False)
 
             # save majority vote predictions
             ensemble_preds = pd.DataFrame({'Test_example': result_table['Test_example'][:int(len(y_true) / num_models)],
@@ -211,9 +220,91 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
 
 
         elif ensemble_method == 'inter':
-            ## TO DO: IMPLEMENT THIS METHOD ##
-            # (make sures this code block returns ensemble_preds dataframe as above)
-            raise NotImplementedError
+            
+            # FIRST step of unifying tokens (and associated interpretability scores): process each row individually
+            merged_tokens = [detokenize_single(batch_tokens[i],
+                                               np.array([lime_scores[i], shap_scores[i], attention_scores[i], lig_scores[i]]),
+                                               model_id[i]) for i in range(len(test_obs_idx))]
+            
+            # SECOND step of unifying tokens and scores: (forces agreement across full set of outputs for each test observation)
+            unified_results = [i for i in range(len(test_obs_idx))]
+            
+            # loop through each test observation
+            for test_obs in set(test_obs_idx):
+
+                # collect all tokens/inter_scores associated with this observation (= one item for each constituent model)
+                idx = [i for i, x in enumerate(test_obs_idx) if x==test_obs]
+                merged_toks_list = [merged_tokens[i] for i in idx]
+                num_models = len(merged_toks_list)
+
+                # forward pass to force agreement
+                fwd_pass = [merged_toks_list[0]]
+                for i in range(1, num_models):
+                    op = force_agreement(toks_a_input = fwd_pass[0][0],
+                                         toks_b_input = merged_toks_list[i][0],
+                                         inter_a = fwd_pass[0][1],
+                                         inter_b = merged_toks_list[i][1])
+                    fwd_pass[0] = [op[0], op[1]]
+                    fwd_pass.append([op[0], op[2]])
+
+                # backwards pass to force agreement
+                bkw_pass = [fwd_pass[-1]]
+                for i in range(num_models-1, 0, -1):
+                    op = force_agreement(toks_a_input = bkw_pass[0][0],
+                                         toks_b_input = fwd_pass[i-1][0],
+                                         inter_a = bkw_pass[0][1],
+                                         inter_b = fwd_pass[i-1][1])
+                    bkw_pass[0] = [op[0], op[1]]
+                    bkw_pass.append([op[0], op[2]])
+
+                bkw_pass.reverse()
+
+                # check all models now have the same number of tokens
+                assert min([len(a[0]) for a in bkw_pass]) == max([len(a[0]) for a in bkw_pass]), 'unification has failed, please debug'
+
+                # calculate model agreement scores
+                lime_scores = [a[1][0, :] for a in bkw_pass]
+                shap_scores = [a[1][1, :] for a in bkw_pass]
+                attn_scores = [a[1][2, :] for a in bkw_pass]
+                intg_scores = [a[1][3, :] for a in bkw_pass]
+                lime_agreement = [sum([cos_sim(a, b) for b in lime_scores])/len(lime_scores) for a in lime_scores]
+                shap_agreement = [sum([cos_sim(a, b) for b in shap_scores])/len(shap_scores) for a in shap_scores]
+                attn_agreement = [sum([cos_sim(a, b) for b in attn_scores])/len(attn_scores) for a in attn_scores]
+                intg_agreement = [sum([cos_sim(a, b) for b in intg_scores])/len(intg_scores) for a in intg_scores]
+                
+                # keep track of results in the right order
+                for i, j in enumerate(idx):
+                    unified_results[j] = {'Tokens_unified': bkw_pass[i][0],
+                                          'Inter_scores_unified': bkw_pass[i][1],
+                                          'Lime_agreement': lime_agreement[i],
+                                          'Shap_agreement': shap_agreement[i],
+                                          'Attention_agreement': attn_agreement[i],
+                                          'Integrated_Grad_agreement':  intg_agreement[i]}
+            
+            # Save the unified tokens / interpretability scores / agreement scores
+            result_table['Tokens_unified'] = [a['Tokens_unified'] for a in unified_results]
+            result_table['Lime_unified'] = [a['Inter_scores_unified'][0, :] for a in unified_results]
+            result_table['Shap_unified'] = [a['Inter_scores_unified'][1, :] for a in unified_results]
+            result_table['Attention_unified'] = [a['Inter_scores_unified'][2, :] for a in unified_results]
+            result_table['Integrated_Grad_unified'] = [a['Inter_scores_unified'][3, :] for a in unified_results]
+            result_table['Lime_agreement'] = [a['Lime_agreement'] for a in unified_results]
+            result_table['Shap_agreement'] = [a['Shap_agreement'] for a in unified_results]
+            result_table['Attention_agreement'] = [a['Attention_agreement'] for a in unified_results]
+            result_table['Integrated_Grad_agreement'] = [a['Integrated_Grad_agreement'] for a in unified_results]
+            
+            result_table['Overall_agreement'] = result_table['Lime_agreement'] + result_table['Shap_agreement'] + result_table['Attention_agreement'] + result_table['Integrated_Grad_agreement']
+            
+            result_table.to_csv(os.path.join(destination_path, f"all_constituent_predictions_{model_name}.csv"), index = False)
+            
+            
+            # make the final ensemble predictions
+            ensemble_preds = result_table.loc[result_table.groupby("Test_example")["Overall_agreement"].idxmax()]
+            ensemble_preds = ensemble_preds[['Model_id', 'Test_example', 'Predicted Label', 'True Label']]
+            ensemble_preds = ensemble_preds.rename(columns={'Predicted Label': 'Ensemble_pred', 'True Label': 'True_label'})
+
+            # save the final predictions
+            ensemble_preds.to_csv(os.path.join(destination_path, f"ensemble_predictions_{model_name}.csv"), index = False)
+            
 
 
         # Calculate and save ensemble metrics
@@ -315,3 +406,6 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
         ## TO DO: IMPLEMENT THIS METHOD ##
         # add to the 'wt_avg' code block when ready, method is similar
         raise NotImplementedError
+
+def cos_sim(a, b):
+    return np.dot(a, b)/(np.linalg.norm(a)*np.linalg.norm(b))
