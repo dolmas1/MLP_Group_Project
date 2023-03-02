@@ -55,7 +55,7 @@ constituent_models:
 
 ensemble_details:
   random_seed: 42
-  ensemble_method: "majority"                         # one of 'majority', 'wt_avg', 'latent' (NOT IMP YET), 'inter'
+  ensemble_method: "inter"                            # one of 'majority', 'wt_avg', 'latent' (NOT IMP YET), 'inter'
   destination_path: "../results/ensemble_inter"       # where will results be saved
   ## TO DO: add cosine/dot product toggle
   ## TO DO: add option to list which interpretability measures to use
