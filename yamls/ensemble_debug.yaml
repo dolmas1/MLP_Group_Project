@@ -1,0 +1,24 @@
+constituent_models:
+  - load_from: "../results/debug_bert-medium/model_best_acc.pt"   # path to a trained model you want to include (include the full .pt filename, not just the path!)
+    embeddings: "prajjwal1/bert-medium"                           # roberta-base or bert-base-cased or prajjwal1/bert-medium
+    tokenizer: "prajjwal1/bert-medium"                            # roberta-base or bert-base-cased or prajjwal1/bert-medium
+    model_name: "bert_medium_rand_1"                              # string to identify the name of this model (as multiple constituent models of same type may be included, we need to distinguish between them)
+    positive_class_weight: 1
+    
+  - load_from: "../results/debug_roberta/model_best_acc.pt"
+    embeddings: "roberta-base"
+    tokenizer: "roberta-base"
+    model_name: "roberta_rand_1"
+    positive_class_weight: 1
+
+ensemble_details:
+  random_seed: 42
+  ensemble_method: "majority"                                     # one of 'majority', 'wt_avg', 'latent' (NOT IMP YET), 'inter' (NOT IMP YET)
+  destination_path: "../results/ensemble_debug"                   # where will results be saved
+    
+data:
+  path: "../data/hatespeech"
+  batch_size: 4
+  train_file: "debug_train.csv"
+  dev_file: "debug_dev.csv"
+  test_file: "debug_test.csv"

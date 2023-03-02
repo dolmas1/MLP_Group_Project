@@ -1,0 +1,41 @@
+INFO:root:Welcome :)
+
+INFO:root:Device used: cuda:0
+
+INFO:root:Only testing, no training!
+INFO:root:Loading 9 Constituent models
+INFO:root:Model used: prajjwal1/bert-medium
+INFO:root:Model used: prajjwal1/bert-medium
+INFO:root:Model used: prajjwal1/bert-medium
+INFO:root:Model used: roberta-base
+INFO:root:Model used: roberta-base
+INFO:root:Model used: roberta-base
+INFO:root:Model used: bert-base-cased
+INFO:root:Model used: bert-base-cased
+INFO:root:Model used: bert-base-cased
+INFO:root:Model loaded from <== ../results/bert_medium1/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert_medium2/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert_medium3/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/roberta1/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/roberta2/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/roberta3/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert1/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert2/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert3/model_best_acc.pt
+INFO:root:Classification Report:
+INFO:root:
+              precision    recall  f1-score   support
+
+           1     0.7482    0.8739    0.8062       119
+           0     0.8500    0.7083    0.7727       120
+
+    accuracy                         0.7908       239
+   macro avg     0.7991    0.7911    0.7895       239
+weighted avg     0.7993    0.7908    0.7894       239
+
+INFO:root:True Positives: 104
+INFO:root:False Positives: 35
+INFO:root:True Negatives: 85
+INFO:root:False Negatives 15
+INFO:root:
+Goodbye :)

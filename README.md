@@ -1,7 +1,7 @@
 # MLP_Group_Project
 
-# 1. How to Train a Model
-### 1. Install requirements (see Section 4)
+# 1. How to Train an individual Model
+### 1. Install requirements (see Section 5)
 
 ### 2. Specify your parameters in a yaml file in the folder `yamls`.
 
@@ -20,8 +20,8 @@ python run.py ../yamls/base.yaml
 ### 4. For debugging:
 You can use the smaller debug datasets (`data/hatespeech/debug_train.csv`), so you don't have to wait too long ;)
 
-# 1. How to Test a Model
-### 1. Install requirements (see Section 4)
+# 2. How to Test an individual Model
+### 1. Install requirements (see Section 5)
 
 ### 2. Specify your parameters in a yaml file in the folder `yamls`.
 
@@ -49,7 +49,56 @@ python run.py ../yamls/base.yaml test
 ```
 
 
-# 3. Directory Structure
+# 3. How to run an ensemble
+### 1. Install requirements (see Section 5)
+
+### 2. Specify your parameters in a yaml file in the folder `yamls`.
+
+You must specify a list of already-trained models ('constituent models'), including the location of the model checkpint, model type, and tokenizer.
+You must also include details on how the ensemble will be constructed (the ensemble_method, as well as random seed and output directory).
+FInally, include details on the dataset.
+For example:
+```
+constituent_models:
+  - load_from: "../results/debug_bert-medium/model_best_acc.pt"   # path to a trained model you want to include (include the full .pt filename, not just the path!)
+    embeddings: "prajjwal1/bert-medium"                           # roberta-base or bert-base-cased or prajjwal1/bert-medium
+    tokenizer: "prajjwal1/bert-medium"                            # roberta-base or bert-base-cased or prajjwal1/bert-medium
+    model_name: "bert_medium_rand_1"                              # string to identify the name of this model (as multiple constituent models of same type may be included, we need to distinguish between them)
+    positive_class_weight: 1
+    
+  - load_from: "../results/debug_roberta/model_best_acc.pt"
+    embeddings: "roberta-base"
+    tokenizer: "roberta-base"
+    model_name: "roberta_rand_1"
+    positive_class_weight: 1
+
+ensemble_details:
+  random_seed: 42
+  ensemble_method: "majority"                                     # one of 'majority', 'wt_avg', 'latent' (NOT IMP YET), 'inter' (NOT IMP YET)
+  destination_path: "../results/ensemble_debug"                   # where will results be saved
+    
+data:
+  path: "../data/hatespeech"
+  batch_size: 4
+  train_file: "debug_train.csv"
+  dev_file: "debug_dev.csv"
+  test_file: "debug_test.csv"
+  
+```
+
+### 3. cd into the `scripts` folder 
+### 4. Run the ensemble: 
+```
+python run_ensemble.py ../yamls/<your_yaml.yaml>
+```
+for example 
+```
+python run_ensemble.py ../yamls/ensemble_debug.yaml
+```
+
+
+
+# 4. Directory Structure
 ```
 ├── data
 │   └── hatespeech
@@ -67,13 +116,17 @@ python run.py ../yamls/base.yaml test
 ├── requirements.txt
 ├── results
 ├── scripts
+│   ├── attention.py
 │   ├── checkpoints.py
 │   ├── classifiers.py
 │   ├── datasets.py
+│   ├── ensembles.py
 │   ├── evaluation.py
+│   ├── integrated_gradients.py
 │   ├── load_safe_metrics.py
 │   ├── model.py
 │   ├── plot_loss.py
+│   ├── run_ensemble.py
 │   ├── run.py
 │   └── training.py
 ├── split_data.py
@@ -82,7 +135,7 @@ python run.py ../yamls/base.yaml test
     └── debug.yaml
 ```
 
-# 4. Requirements
+# 5. Requirements
  We recommend to use a virtual environment. 
 Here an instruction to install all depencencies with conda.
 
@@ -97,7 +150,7 @@ Activate the environment:
 conda activate inter
 ```
 
-# 5. Dataset
+# 6. Dataset
 Number of examples:
 - Train: 1914 examples
 
@@ -109,6 +162,6 @@ The data is stored in `data/hatespeech` in csv files (`train/dev/test.csv`).
 
 The label is separated by a tab (\t) from the example.
 
-# 6. More Resources
+# 7. More Resources
 
 Overleaf: https://de.overleaf.com/project/63c8fe7f757d22009c9a1c48

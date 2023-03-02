@@ -1,9 +1,8 @@
 import torch
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def get_attention_scores(attention_mask, attentions):
-    layer_sum = torch.zeros(attentions[0].shape)
+    layer_sum = torch.zeros(attentions[0].shape).to(device)
 
     for layer in attentions:
         layer_sum += layer.to(device)
