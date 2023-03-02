@@ -45,22 +45,27 @@ class Classifier(nn.Module):
 
 
 
-    def forward(self, text, label=None, lig=False):
+    def forward(self, input_ids, label=None, lig=False, shap=False, attention_mask=None):
         """Forward pass of the model of a given text.
 
         Args:
-            text (str): string containing the text to classify
+            text (input_ids): tensor containing the input_ids of the text to classify
             label (int): 1 (positive) or 0 (negative) labels for the given text, default: None
 
         Returns:
             out (Attributes): Attributes wrapper class with information important for further processing
         """
+        text = input_ids
         if lig:
             text.to(device)
             return self.encoder(text, labels=label)
+        
+        if shap or attention_mask != None: return self.encoder(text, labels=label)
 
         text.to(device)
-        label.to(device)
+
+        if label != None:
+            label.to(device)
 
         out = self.encoder(text, labels=label)
         #l = None

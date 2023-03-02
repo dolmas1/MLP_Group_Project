@@ -12,6 +12,7 @@ from prettytable import PrettyTable
 
 from integrated_gradients import get_integrated_gradients_score
 from attention import get_attention_scores
+from lime_shap import get_shap_scores
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 id2label = {0: "noHate", 1: "hate"}
@@ -29,7 +30,7 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
     """
     y_pred = []; y_true = []; y_probs = []
     batch_tokens = []
-    lig_scores = []; attention_scores = []
+    lig_scores = []; attention_scores = []; shap_scores = []
 
     model.eval()
     
@@ -52,9 +53,14 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
                 toks = [tok for tok in tokenizer.convert_ids_to_tokens(text[example]) if tok != tokenizer.pad_token]
                 batch_tokens.append(toks)
                 tokens.append(toks)
+
+            # shap scores
+            shap_scores += get_shap_scores(model, text,tokenizer)
             
             # attention scores
-            attention_scores +=  get_attention_scores(batch['attention_mask'], output.attentions)
+            attention_mask = batch['attention_mask'].to(device)
+            attentions = output.attentions
+            attention_scores +=  get_attention_scores(attention_mask, attentions)
 
             # layerwise integrated gradient
             lig_scores += get_integrated_gradients_score(text, labels, tokens, tokenizer, model, model_type)
@@ -70,8 +76,8 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
     y_true = np.array(y_true)
 
     result_table = PrettyTable(["Tokens", "Lime", "Shap", "Attention", "Integrated Gradients", "Probability for Hate", "Predicted Label"])
-    for tok, att, lig, prob, pred in zip(batch_tokens, attention_scores, lig_scores, y_probs, y_pred):
-        result_table.add_row([tok, "", "",att,  lig, round(prob, 2),  pred])
+    for tok, shap, att, lig, prob, pred in zip(batch_tokens, shap_scores, attention_scores, lig_scores, y_probs, y_pred):
+        result_table.add_row([tok, "", shap, att,  lig, round(prob, 2),  pred])
     result_table.border = False
     result_table.align = "l"
     with open(os.path.join(destination_path, f"predictions_model_{model_name}.csv"), "w+") as csv_out:
