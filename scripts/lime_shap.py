@@ -2,12 +2,14 @@ import shap
 from transformers import pipeline
 import torch.nn.functional as F
 from lime.lime_text import LimeTextExplainer
+import torch
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def get_shap_scores(model, text, tokenizer):
     
-    pipe = pipeline("text-classification", model=model, tokenizer=tokenizer)
-    explainer = shap.Explainer(pipe) 
+    pipe = pipeline("text-classification", model=model.to(device), tokenizer=tokenizer)
+    explainer = shap.Explainer(pipe)
 
     sentences = []
     for t in text:
@@ -29,9 +31,9 @@ def get_lime_scores(model, text, tokenizer):
             s = i.replace("Ġ", "").replace("##", "")
             new_input_string.append(s)
 
-        outputs = model(**tokenizer(new_input_string, return_tensors="pt", padding=True))
+        outputs = model(**tokenizer(new_input_string, return_tensors="pt", padding=True).to(device))
         tensor_logits = outputs[0]
-        probas = F.softmax(tensor_logits, dim=1).detach().numpy()
+        probas = F.softmax(tensor_logits, dim=1).detach().cpu().numpy()
         return probas
 
     lime_scores = []
@@ -41,7 +43,7 @@ def get_lime_scores(model, text, tokenizer):
     for t in text:
         tokens = [tok for tok in tokenizer.convert_ids_to_tokens(t) if tok not in [tokenizer.pad_token, tokenizer.cls_token, tokenizer.sep_token]]
         t = " ".join(tokens)
-        exp = explainer.explain_instance(t, predictor, num_features=len(tokens), num_samples=2000)
+        exp = explainer.explain_instance(t, predictor, num_features=len(tokens), num_samples=100)
         exp_dict = exp.as_map()
         scores = ["_" for i in range(len(exp_dict[1]))]
         for s in exp_dict[1]:
