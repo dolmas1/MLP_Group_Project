@@ -8,7 +8,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def get_shap_scores(model, text, tokenizer):
     
-    pipe = pipeline("text-classification", model=model.to(device), tokenizer=tokenizer)
+    pipe = pipeline("text-classification", model=model.to(device), tokenizer=tokenizer, device=device)
     explainer = shap.Explainer(pipe)
 
     sentences = []
