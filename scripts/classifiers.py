@@ -45,7 +45,7 @@ class Classifier(nn.Module):
 
 
 
-    def forward(self, input_ids, label=None, lig=False, shap=False, attention_mask=None):
+    def forward(self, input_ids=None, token_type_ids=None, label=None, lig=False, shap=False, attention_mask=None):
         """Forward pass of the model of a given text.
 
         Args:
@@ -56,6 +56,10 @@ class Classifier(nn.Module):
             out (Attributes): Attributes wrapper class with information important for further processing
         """
         text = input_ids
+
+        if token_type_ids !=None:
+            text = token_type_ids
+
         if lig:
             text.to(device)
             return self.encoder(text, labels=label)
@@ -68,8 +72,7 @@ class Classifier(nn.Module):
             label.to(device)
 
         out = self.encoder(text, labels=label)
-        #l = None
-        #if label is not None:
+
         l = self.loss(out[1], label)
        
         out = Attributes(logits=out[1], loss=l, hidden_states=out[2][-1][:,0], attentions=out["attentions"])

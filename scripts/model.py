@@ -76,18 +76,17 @@ def run_cl(embeddings, model, data, only_test=False):
     early_stopping = model["early_stopping"]
 
     # check destination path and create directory
-    if not os.path.exists(destination_path):
-        os.mkdir(destination_path)
-    # if os.path.exists(destination_path):
-    #     if len(os.listdir(destination_path)) > 1: raise FileExistsError(f"Model directory {destination_path} exists.")
 
-    # os.mkdir(destination_path)
-    # logging.basicConfig(level=logging.INFO, 
-    #         handlers=[
-    #             logging.FileHandler(os.path.join(destination_path, "run.log")),
-    #             logging.StreamHandler()
-    #             ]
-    #         )
+    if os.path.exists(destination_path):
+        if len(os.listdir(destination_path)) > 1: raise FileExistsError(f"Model directory {destination_path} exists.")
+
+    os.mkdir(destination_path)
+    logging.basicConfig(level=logging.INFO, 
+            handlers=[
+                logging.FileHandler(os.path.join(destination_path, "run.log")),
+                logging.StreamHandler()
+                ]
+            )
     logging.info("Welcome :)\n")
     logging.info(f"Device used: {device}\n")
 

@@ -63,7 +63,7 @@ def train(model,
            
             labels = batch_labels.to(device)
             text = batch['input_ids'].squeeze(1).to(device)      
-            output = model(text, labels)
+            output = model(text, label=labels)
             #logits = output.logits
             #probs = F.softmax(logits, dim=1)
 
@@ -88,7 +88,7 @@ def train(model,
                     
                         labels = batch_labels.to(device)
                         text = batch['input_ids'].squeeze(1).to(device)    
-                        output = model(text, labels)
+                        output = model(text, label=labels)
                         #print("output", output.logits)
                         
 

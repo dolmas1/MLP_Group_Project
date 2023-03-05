@@ -44,7 +44,7 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
             text = batch['input_ids'].squeeze(1).to(device) 
 
 
-            output = model(text, labels)
+            output = model(text, label=labels)
 
             logits = output.logits
             probs = F.softmax(logits, dim=1)
@@ -56,11 +56,11 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
                 batch_tokens.append(toks)
                 tokens.append(toks)
 
-            # lime scores
-            lime_scores += get_lime_scores(model, text,tokenizer)
-
             # shap scores
             shap_scores += get_shap_scores(model, text,tokenizer)
+
+            # lime scores
+            lime_scores += get_lime_scores(model, text,tokenizer)
             
             # attention scores
             attention_mask = batch['attention_mask'].to(device)
@@ -69,8 +69,6 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
 
             # layerwise integrated gradient
             lig_scores += get_integrated_gradients_score(text, labels, tokens, tokenizer, model, model_type)
-
-
 
             y_probs.extend(probs.tolist())
             y_pred.extend(torch.argmax(logits, 1).tolist())
@@ -156,7 +154,7 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
                     labels = batch_labels.to(device)
                     text = batch['input_ids'].squeeze(1).to(device)
 
-                    output = model(text, labels)
+                    output = model(text, label=labels)
 
                     logits = output.logits
                     probs = F.softmax(logits, dim=1)
