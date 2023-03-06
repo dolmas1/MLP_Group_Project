@@ -21,7 +21,7 @@ id2label = {0: "noHate", 1: "hate"}
 #label2id = {"ungrammatical":0, "grammatical":1}
 
 # Evaluation Function (for individual models)
-def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_type):
+def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_type, test_file_path):
     """Evaluation function for testing purposes (single models only).
 
     Args:
@@ -30,6 +30,11 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
         destination_path (str): path where to store the results
         model_name (str): string how the models result shall be saved
     """
+
+    df = pd.read_csv(test_file_path, sep="\t", header=0)
+    original_text = [text for text in df['example']]
+    original_text_id = 0
+
     y_pred = []; y_true = []; y_probs = []
     batch_tokens = []
     lig_scores = []; attention_scores = []; shap_scores = []; lime_scores = []
@@ -42,7 +47,10 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
         
             labels = batch_labels.to(device)
             text = batch['input_ids'].squeeze(1).to(device) 
-
+            
+            # get original text for interpretability methods
+            original_batch_text = original_text[original_text_id : original_text_id + len(labels)]
+            original_text_id += len(labels) 
 
             output = model(text, label=labels)
 
@@ -56,11 +64,12 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
                 batch_tokens.append(toks)
                 tokens.append(toks)
 
-            # shap scores
-            shap_scores += get_shap_scores(model, text,tokenizer)
 
             # lime scores
             lime_scores += get_lime_scores(model, text,tokenizer)
+
+            # shap scores
+            shap_scores += get_shap_scores(model, text,tokenizer, original_batch_text)
             
             # attention scores
             attention_mask = batch['attention_mask'].to(device)
@@ -74,7 +83,7 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
             y_pred.extend(torch.argmax(logits, 1).tolist())
             y_true.extend(labels.tolist())
 
-
+            assert len(lig_scores) == len(attention_scores) == len(lime_scores) == len(shap_scores)
     y_probs = np.array([prob[1] for prob in y_probs])
     y_true = np.array(y_true)
 

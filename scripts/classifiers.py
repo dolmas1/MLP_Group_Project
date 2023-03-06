@@ -57,8 +57,8 @@ class Classifier(nn.Module):
         """
         text = input_ids
 
-        if token_type_ids !=None:
-            text = token_type_ids
+        #if token_type_ids !=None:
+        #    text = token_type_ids
 
         if lig:
             text.to(device)
