@@ -66,10 +66,10 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
 
 
             # lime scores
-            lime_scores += get_lime_scores(model, text,tokenizer)
+            lime_scores += get_lime_scores(model, text, tokenizer)
 
             # shap scores
-            shap_scores += get_shap_scores(model, text,tokenizer, original_batch_text)
+            shap_scores += get_shap_scores(model, text, tokenizer, original_batch_text)
             
             # attention scores
             attention_mask = batch['attention_mask'].to(device)
@@ -122,7 +122,7 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
 
 
 # Evaluation function (for ensembles)
-def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders, destination_path, model_name, tokenizers, model_types, ensemble_method = 'majority'):
+def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders, destination_path, model_name, tokenizers, model_types, test_file_path, ensemble_method = 'majority'):
     """Evaluation function for testing purposes (ensembles).
 
     Args:
@@ -133,12 +133,14 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
         model_name (str): string of ensemble model name (how results shall be saved)
         tokenizers (list): the set of tokenizers used for each constituent model
         model_type (list): the set of model types (str) for each constituent model (taken from classifier['constituent_models']['embeddings'])
+        test_file_path (str): path to test file (needed to load original sentence strings for LIME/SHAP)
         ensemble_method (str): one of 'majority', 'wt_avg', 'latent', 'inter'
                                'majority': simple majority vote across predicted class labels of each constituent model 
                                'wt_avg': for each model_type category, create a new network whose weights are the avg of all constituent models in that category. Then run inference, and majority vote
                                'latent': for each model_type category, get avg latent embedding of test examples according to constituent models in that category. Build new classifier on resultant embeddings. Then run inference, and majority vote.
                                'inter': interpretability weighted ensemble (details TBC)
     """
+    
     if ensemble_method in ['majority', 'inter']:
 
         model_id = []; test_obs_idx = []
@@ -156,12 +158,20 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
             model_type = model_types[i]
             test_loader = test_loaders[i]
 
+            df = pd.read_csv(test_file_path, sep="\t", header=0)
+            original_text = [text for text in df['example']]
+            original_text_id = 0
+            
             with torch.no_grad():
 
                 for batch, batch_labels in test_loader:
 
                     labels = batch_labels.to(device)
                     text = batch['input_ids'].squeeze(1).to(device)
+                    
+                    # get original text for interpretability methods
+                    original_batch_text = original_text[original_text_id : original_text_id + len(labels)]
+                    original_text_id += len(labels)
 
                     output = model(text, label=labels)
 
@@ -186,7 +196,7 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
                     lime_scores += get_lime_scores(model, text, tokenizer)
 
                     # shap scores
-                    shap_scores += get_shap_scores(model, text, tokenizer)
+                    shap_scores += get_shap_scores(model, text, tokenizer, original_batch_text)
                     
 
                     y_probs.extend(probs.tolist())
@@ -194,7 +204,8 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
                     y_true.extend(labels.tolist())
 
                     model_id.extend(len(labels) * [constituent_model_name])
-
+                    
+                    assert len(lig_scores) == len(attention_scores) == len(lime_scores) == len(shap_scores)
 
         # collect constituent model predictions, produce csv
         y_probs = np.array([prob[1] for prob in y_probs])
@@ -406,6 +417,7 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
                           model_name = "ensemble_model",
                           tokenizers = wt_avg_tokenizers,
                           model_types = wt_avg_model_types,
+                          test_file_path = test_file_path,
                           ensemble_method = 'majority')
 
     elif ensemble_method in ['latent']:

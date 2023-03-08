@@ -40,7 +40,7 @@ def get_lime_scores(model, text, tokenizer):
             assert len(padded_ids) == 512
             padded_input_ids.append(padded_ids)
 
-        outputs = model(torch.tensor(padded_input_ids), shap=True)
+        outputs = model(torch.tensor(padded_input_ids).to(device), shap=True)
         tensor_logits = outputs[0]
         probas = F.softmax(tensor_logits, dim=1).detach().cpu().numpy()
         return probas

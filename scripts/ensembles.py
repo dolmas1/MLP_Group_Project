@@ -104,6 +104,8 @@ def run_ensemble(constituent_models, data, ensemble_details):
     dev_file = data["dev_file"]
     test_file = data["test_file"]
     
+    test_file_path = os.path.join(path, test_file)
+    
     # load data
     if "hate" in path:
         train_data_arr = [HateSpeech(root_dir=path, label_file=train_file, tokenizer=tok) for tok in tokenizers]
@@ -126,6 +128,7 @@ def run_ensemble(constituent_models, data, ensemble_details):
                       model_name = "ensemble_model",
                       tokenizers = tokenizers,
                       model_types = embeds,
+                      test_file_path = test_file_path,
                       ensemble_method = ensemble_details['ensemble_method'])
 
     logging.info("\nGoodbye :)")
