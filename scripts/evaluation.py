@@ -162,6 +162,8 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
             original_text = [text for text in df['example']]
             original_text_id = 0
             
+            logging.info(f"\nStarting analysis for {constituent_model_name}")
+            
             with torch.no_grad():
 
                 for batch, batch_labels in test_loader:
@@ -208,6 +210,8 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
                     assert len(lig_scores) == len(attention_scores) == len(lime_scores) == len(shap_scores)
 
         # collect constituent model predictions, produce csv
+        logging.info(f"\nSaving all constituent model outputs")
+        
         y_probs = np.array([prob[1] for prob in y_probs])
         y_true = np.array(y_true)
 
@@ -282,7 +286,7 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
 
                 # calculate model agreement scores
                 lime_scores = [a[1][0, :] for a in bkw_pass]
-                shap_scores = [a[1][1, :] for a in bkw_pass]
+                shap_scores = [a[1][1, :] + 1e-8 for a in bkw_pass] # sometimes SHAP are all zero, which causes divide-by-zero errors
                 attn_scores = [a[1][2, :] for a in bkw_pass]
                 intg_scores = [a[1][3, :] for a in bkw_pass]
                 lime_agreement = [sum([cos_sim(a, b) for b in lime_scores])/len(lime_scores) for a in lime_scores]
