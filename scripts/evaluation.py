@@ -317,6 +317,7 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
             result_table['Overall_agreement'] = result_table['Lime_agreement'] + result_table['Shap_agreement'] + result_table['Attention_agreement'] + result_table['Integrated_Grad_agreement']
             
             result_table.to_csv(os.path.join(destination_path, f"all_constituent_predictions_{model_name}.csv"), index = False)
+            result_table.to_pickle(os.path.join(destination_path, f"all_constituent_predictions_{model_name}.pkl"))
             
             
             # make the final ensemble predictions
