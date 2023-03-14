@@ -72,16 +72,16 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
                     tokens.append(toks)
 
 
-                # lime scores
-                lime_scores += get_lime_scores(model, text, tokenizer)
+            # lime scores
+            lime_scores += get_lime_scores(model, text, tokenizer)
 
-                # shap scores
-                shap_scores += get_shap_scores(model, text, tokenizer, original_batch_text)
-                
-                # attention scores
-                attention_mask = batch['attention_mask'].to(device)
-                attentions = output.attentions
-                attention_scores +=  get_attention_scores(attention_mask, attentions)
+            # shap scores
+            shap_scores += get_shap_scores(model, text, tokenizer, original_batch_text)
+            
+            # attention scores
+            attention_mask = batch['attention_mask'].to(device)
+            attentions = output.attentions
+            attention_scores +=  get_attention_scores(attention_mask, attentions)
 
                 # layerwise integrated gradient
                 lig_scores += get_integrated_gradients_score(text, labels, tokens, tokenizer, model, model_type)
