@@ -1,0 +1,26 @@
+classifier:
+
+  embeddings:
+    embeddings: "roberta-base"    # roberta-base or bert-base-cased or prajjwal1/bert-medium
+    tokenizer: "roberta-base"     # roberta-base or bert-base-cased or prajjwal1/bert-medium
+
+  model:
+  
+    epochs: 100
+    batch_size: 4
+    positive_class_weight: 1
+    early_stopping: 10
+    random_seed: 0
+
+    destination_path: "results/cola_roberta1"     
+
+  interpretation:
+    analysis: False                
+    
+  data:
+    path: "data/cola_public/raw"
+    train_file: "in_domain_train.tsv"
+    dev_file: "in_domain_dev.tsv"
+    test_file: "out_of_domain_dev.tsv"
+
+ 

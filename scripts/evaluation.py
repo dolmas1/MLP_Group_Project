@@ -31,9 +31,9 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
         model_name (str): string how the models result shall be saved
     """
     if analysis:
-        if "hate" in path:
+        if "hate" in test_file_path:
             df = pd.read_csv(test_file_path, sep="\t", header=0)
-        elif "cola" in path:
+        elif "cola" in test_file_path:
             columns = ["id", "label", "star", "example"]
             df = pd.read_csv(test_file_path, sep="\t", header=None, names=columns)
 
