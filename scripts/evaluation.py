@@ -72,16 +72,16 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
                     tokens.append(toks)
 
 
-            # lime scores
-            lime_scores += get_lime_scores(model, text, tokenizer)
+                # lime scores
+                lime_scores += get_lime_scores(model, text, tokenizer)
 
-            # shap scores
-            shap_scores += get_shap_scores(model, text, tokenizer, original_batch_text)
-            
-            # attention scores
-            attention_mask = batch['attention_mask'].to(device)
-            attentions = output.attentions
-            attention_scores +=  get_attention_scores(attention_mask, attentions)
+                # shap scores
+                shap_scores += get_shap_scores(model, text, tokenizer, original_batch_text)
+                
+                # attention scores
+                attention_mask = batch['attention_mask'].to(device)
+                attentions = output.attentions
+                attention_scores +=  get_attention_scores(attention_mask, attentions)
 
                 # layerwise integrated gradient
                 lig_scores += get_integrated_gradients_score(text, labels, tokens, tokenizer, model, model_type)
@@ -166,7 +166,12 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
             model_type = model_types[i]
             test_loader = test_loaders[i]
 
-            df = pd.read_csv(test_file_path, sep="\t", header=0)
+            if "hate" in test_file_path:
+                df = pd.read_csv(test_file_path, sep="\t", header=0)
+            elif "cola" in test_file_path:
+                columns = ["id", "label", "star", "example"]
+                df = pd.read_csv(test_file_path, sep="\t", header=None, names=columns)
+
             original_text = [text for text in df['example']]
             original_text_id = 0
             
