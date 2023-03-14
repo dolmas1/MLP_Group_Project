@@ -21,7 +21,7 @@ id2label = {0: "noHate", 1: "hate"}
 #label2id = {"ungrammatical":0, "grammatical":1}
 
 # Evaluation Function (for individual models)
-def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_type, test_file_path):
+def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_type, test_file_path, analysis):
     """Evaluation function for testing purposes (single models only).
 
     Args:
@@ -30,10 +30,15 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
         destination_path (str): path where to store the results
         model_name (str): string how the models result shall be saved
     """
+    if analysis:
+        if "hate" in path:
+            df = pd.read_csv(test_file_path, sep="\t", header=0)
+        elif "cola" in path:
+            columns = ["id", "label", "star", "example"]
+            df = pd.read_csv(test_file_path, sep="\t", header=None, names=columns)
 
-    df = pd.read_csv(test_file_path, sep="\t", header=0)
-    original_text = [text for text in df['example']]
-    original_text_id = 0
+        original_text = [text for text in df['example']]
+        original_text_id = 0
 
     y_pred = []; y_true = []; y_probs = []
     batch_tokens = []
@@ -48,54 +53,57 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
             labels = batch_labels.to(device)
             text = batch['input_ids'].squeeze(1).to(device) 
             
-            # get original text for interpretability methods
-            original_batch_text = original_text[original_text_id : original_text_id + len(labels)]
-            original_text_id += len(labels) 
-
             output = model(text, label=labels)
 
             logits = output.logits
             probs = F.softmax(logits, dim=1)
 
-            # gets tokens for printing in file
-            tokens = []
-            for example in range(len(text)):
-                toks = [tok for tok in tokenizer.convert_ids_to_tokens(text[example]) if tok != tokenizer.pad_token]
-                batch_tokens.append(toks)
-                tokens.append(toks)
+            if analysis:
+                # get original text for interpretability methods
+                original_batch_text = original_text[original_text_id : original_text_id + len(labels)]
+                original_text_id += len(labels) 
 
 
-            # lime scores
-            lime_scores += get_lime_scores(model, text,tokenizer)
+                # gets tokens for printing in file
+                tokens = []
+                for example in range(len(text)):
+                    toks = [tok for tok in tokenizer.convert_ids_to_tokens(text[example]) if tok != tokenizer.pad_token]
+                    batch_tokens.append(toks)
+                    tokens.append(toks)
 
-            # shap scores
-            shap_scores += get_shap_scores(model, text,tokenizer, original_batch_text)
-            
-            # attention scores
-            attention_mask = batch['attention_mask'].to(device)
-            attentions = output.attentions
-            attention_scores +=  get_attention_scores(attention_mask, attentions)
 
-            # layerwise integrated gradient
-            lig_scores += get_integrated_gradients_score(text, labels, tokens, tokenizer, model, model_type)
+                # lime scores
+                lime_scores += get_lime_scores(model, text, tokenizer)
 
-            y_probs.extend(probs.tolist())
-            y_pred.extend(torch.argmax(logits, 1).tolist())
-            y_true.extend(labels.tolist())
+                # shap scores
+                shap_scores += get_shap_scores(model, text, tokenizer, original_batch_text)
+                
+                # attention scores
+                attention_mask = batch['attention_mask'].to(device)
+                attentions = output.attentions
+                attention_scores +=  get_attention_scores(attention_mask, attentions)
 
-            assert len(lig_scores) == len(attention_scores) == len(lime_scores) == len(shap_scores)
+                # layerwise integrated gradient
+                lig_scores += get_integrated_gradients_score(text, labels, tokens, tokenizer, model, model_type)
+
+                y_probs.extend(probs.tolist())
+                y_pred.extend(torch.argmax(logits, 1).tolist())
+                y_true.extend(labels.tolist())
+
+                assert len(lig_scores) == len(attention_scores) == len(lime_scores) == len(shap_scores)
     y_probs = np.array([prob[1] for prob in y_probs])
     y_true = np.array(y_true)
 
-    result_table = PrettyTable(["Tokens", "Lime", "Shap", "Attention", "Integrated Gradients", "Probability for Hate", "Predicted Label"])
-    for tok, lime, shap, att, lig, prob, pred in zip(batch_tokens, lime_scores, shap_scores, attention_scores, lig_scores, y_probs, y_pred):
-        result_table.add_row([tok, lime, shap, att,  lig, round(prob, 2),  pred])
-    result_table.border = False
-    result_table.align = "l"
-    with open(os.path.join(destination_path, f"predictions_model_{model_name}.csv"), "w+") as csv_out:
-        csv_out.write(result_table.get_csv_string())
-    with open(os.path.join(destination_path, f"predictions_model_{model_name}.txt"), "w+") as txt_out:
-        txt_out.write(str(result_table))
+    if analysis:
+        result_table = PrettyTable(["Tokens", "Lime", "Shap", "Attention", "Integrated Gradients", "Probability for Hate", "Predicted Label"])
+        for tok, lime, shap, att, lig, prob, pred in zip(batch_tokens, lime_scores, shap_scores, attention_scores, lig_scores, y_probs, y_pred):
+            result_table.add_row([tok, lime, shap, att,  lig, round(prob, 2),  pred])
+        result_table.border = False
+        result_table.align = "l"
+        with open(os.path.join(destination_path, f"predictions_model_{model_name}.csv"), "w+") as csv_out:
+            csv_out.write(result_table.get_csv_string())
+        with open(os.path.join(destination_path, f"predictions_model_{model_name}.txt"), "w+") as txt_out:
+            txt_out.write(str(result_table))
 
         
 
@@ -122,7 +130,7 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
 
 
 # Evaluation function (for ensembles)
-def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders, destination_path, model_name, tokenizers, model_types, ensemble_method = 'majority'):
+def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders, destination_path, model_name, tokenizers, model_types, test_file_path, ensemble_method = 'majority'):
     """Evaluation function for testing purposes (ensembles).
 
     Args:
@@ -133,12 +141,14 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
         model_name (str): string of ensemble model name (how results shall be saved)
         tokenizers (list): the set of tokenizers used for each constituent model
         model_type (list): the set of model types (str) for each constituent model (taken from classifier['constituent_models']['embeddings'])
+        test_file_path (str): path to test file (needed to load original sentence strings for LIME/SHAP)
         ensemble_method (str): one of 'majority', 'wt_avg', 'latent', 'inter'
                                'majority': simple majority vote across predicted class labels of each constituent model 
                                'wt_avg': for each model_type category, create a new network whose weights are the avg of all constituent models in that category. Then run inference, and majority vote
                                'latent': for each model_type category, get avg latent embedding of test examples according to constituent models in that category. Build new classifier on resultant embeddings. Then run inference, and majority vote.
                                'inter': interpretability weighted ensemble (details TBC)
     """
+    
     if ensemble_method in ['majority', 'inter']:
 
         model_id = []; test_obs_idx = []
@@ -156,12 +166,22 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
             model_type = model_types[i]
             test_loader = test_loaders[i]
 
+            df = pd.read_csv(test_file_path, sep="\t", header=0)
+            original_text = [text for text in df['example']]
+            original_text_id = 0
+            
+            logging.info(f"\nStarting analysis for {constituent_model_name}")
+            
             with torch.no_grad():
 
                 for batch, batch_labels in test_loader:
 
                     labels = batch_labels.to(device)
                     text = batch['input_ids'].squeeze(1).to(device)
+                    
+                    # get original text for interpretability methods
+                    original_batch_text = original_text[original_text_id : original_text_id + len(labels)]
+                    original_text_id += len(labels)
 
                     output = model(text, label=labels)
 
@@ -186,7 +206,7 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
                     lime_scores += get_lime_scores(model, text, tokenizer)
 
                     # shap scores
-                    shap_scores += get_shap_scores(model, text, tokenizer)
+                    shap_scores += get_shap_scores(model, text, tokenizer, original_batch_text)
                     
 
                     y_probs.extend(probs.tolist())
@@ -194,9 +214,12 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
                     y_true.extend(labels.tolist())
 
                     model_id.extend(len(labels) * [constituent_model_name])
-
+                    
+                    assert len(lig_scores) == len(attention_scores) == len(lime_scores) == len(shap_scores)
 
         # collect constituent model predictions, produce csv
+        logging.info(f"\nSaving all constituent model outputs")
+        
         y_probs = np.array([prob[1] for prob in y_probs])
         y_true = np.array(y_true)
 
@@ -271,7 +294,7 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
 
                 # calculate model agreement scores
                 lime_scores = [a[1][0, :] for a in bkw_pass]
-                shap_scores = [a[1][1, :] for a in bkw_pass]
+                shap_scores = [a[1][1, :] + 1e-8 for a in bkw_pass] # sometimes SHAP are all zero, which causes divide-by-zero errors
                 attn_scores = [a[1][2, :] for a in bkw_pass]
                 intg_scores = [a[1][3, :] for a in bkw_pass]
                 lime_agreement = [sum([cos_sim(a, b) for b in lime_scores])/len(lime_scores) for a in lime_scores]
@@ -302,6 +325,7 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
             result_table['Overall_agreement'] = result_table['Lime_agreement'] + result_table['Shap_agreement'] + result_table['Attention_agreement'] + result_table['Integrated_Grad_agreement']
             
             result_table.to_csv(os.path.join(destination_path, f"all_constituent_predictions_{model_name}.csv"), index = False)
+            result_table.to_pickle(os.path.join(destination_path, f"all_constituent_predictions_{model_name}.pkl"))
             
             
             # make the final ensemble predictions
@@ -406,6 +430,7 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
                           model_name = "ensemble_model",
                           tokenizers = wt_avg_tokenizers,
                           model_types = wt_avg_model_types,
+                          test_file_path = test_file_path,
                           ensemble_method = 'majority')
 
     elif ensemble_method in ['latent']:

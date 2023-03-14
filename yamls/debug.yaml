@@ -1,7 +1,7 @@
 classifier:
 
   embeddings:
-    load_from: "../results/blub_blub/model_best_acc.pt"
+    #load_from: "../results/debu_roberta2/model_best_acc.pt"
     embeddings: "roberta-base"                           # roberta-base or bert-base-cased
     tokenizer: "roberta-base"                            # roberta-base or bert-base-cased
 
@@ -12,7 +12,7 @@ classifier:
     early_stopping: 10
     random_seed: 42
 
-    destination_path: "../results/blub_blub2"                  
+    destination_path: "../results/debu_roberta"                  
     
   data:
     path: "../data/hatespeech"

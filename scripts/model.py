@@ -51,7 +51,7 @@ def set_seed(seed):
 
 tokenizer = AutoTokenizer.from_pretrained('bert-base-cased')
 
-def run_cl(embeddings, model, data, only_test=False):
+def run_cl(embeddings, model, interpretation, data, only_test=False):
     """Main function that runs the classifier model, trains and evaluates it.
 
     Args:
@@ -104,6 +104,9 @@ def run_cl(embeddings, model, data, only_test=False):
     classifier = Classifier(embeds, positive_class_weight).to(device)
     tokenizer = AutoTokenizer.from_pretrained(tok)
 
+    # interpretation stuff
+    analysis = interpretation["analysis"]
+
     # data parameter
     path = data["path"]
     train_file = data["train_file"]
@@ -154,12 +157,12 @@ def run_cl(embeddings, model, data, only_test=False):
         best_model_acc = Classifier(embeds, positive_class_weight).to(device)
 
         load_checkpoint(acc_checkpoint, best_model_acc)
-        evaluate(best_model_acc, test_dataloader, destination_path, "best_acc", tokenizer, embeds,  test_file_path)
+        evaluate(best_model_acc, test_dataloader, destination_path, "best_acc", tokenizer, embeds,  test_file_path, analysis)
     
         logging.info("\nEvaluation Model with best LOSS")
         best_model_loss = Classifier(embeds, positive_class_weight).to(device)
         load_checkpoint(loss_checkpoint, best_model_loss)
-        evaluate(best_model_loss, test_dataloader, destination_path, "best_loss", tokenizer, embeds, test_file_path)
+        evaluate(best_model_loss, test_dataloader, destination_path, "best_loss", tokenizer, embeds, test_file_path, analysis)
 
     else:
         logging.info("Only testing, no training!")
@@ -167,6 +170,6 @@ def run_cl(embeddings, model, data, only_test=False):
         loaded_model = Classifier(embeds, positive_class_weight).to(device)
 
         load_checkpoint(parameter_path, loaded_model)
-        evaluate(loaded_model, test_dataloader, destination_path, "loaded_model", tokenizer, embeds, test_file_path)
+        evaluate(loaded_model, test_dataloader, destination_path, "loaded_model", tokenizer, embeds, test_file_path, analysis)
 
     logging.info("\nGoodbye :)")
