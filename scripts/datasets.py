@@ -12,7 +12,7 @@ class HateSpeech(Dataset):
     pred_labels = ["noHate", "hate"]
 
     def __init__(self, root_dir, label_file, tokenizer):
-        """Constructor method for sepsis data.
+        """Constructor method for hate speech data.
         Args:
             root_dir (str): path to the root directory
             label_file (str): filename of the csv file with examples labels
@@ -54,7 +54,7 @@ class Twitter(Dataset):
     pred_labels = ["Non-Hateful", "Hateful"]
 
     def __init__(self, root_dir, label_file, tokenizer):
-        """Constructor method for sepsis data.
+        """Constructor method for twitter hate speech data.
         Args:
             root_dir (str): path to the root directory
             label_file (str): filename of the csv file with examples labels
@@ -98,7 +98,7 @@ class CoLA(Dataset):
     pred_labels = ["noHate", "hate"]
 
     def __init__(self, root_dir, label_file, tokenizer):
-        """Constructor method for sepsis data.
+        """Constructor method for cola data.
         Args:
             root_dir (str): path to the root directory
             label_file (str): filename of the csv file with examples labels
