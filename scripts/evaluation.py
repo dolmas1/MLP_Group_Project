@@ -31,13 +31,18 @@ def evaluate(model, test_loader, destination_path, model_name, tokenizer, model_
         model_name (str): string how the models result shall be saved
     """
     if analysis:
-        if "hate" in test_file_path:
+        if "twitter" in test_file_path:
             df = pd.read_csv(test_file_path, sep="\t", header=0)
+            original_text = [text for text in df['text']]
+
+        elif "hate" in test_file_path:
+            df = pd.read_csv(test_file_path, sep="\t", header=0)
+            original_text = [text for text in df['example']]
         elif "cola" in test_file_path:
             columns = ["id", "label", "star", "example"]
             df = pd.read_csv(test_file_path, sep="\t", header=None, names=columns)
+            original_text = [text for text in df['example']]
 
-        original_text = [text for text in df['example']]
         original_text_id = 0
 
     y_pred = []; y_true = []; y_probs = []
@@ -166,13 +171,17 @@ def evaluate_ensemble(constituent_models, constituent_model_names, test_loaders,
             model_type = model_types[i]
             test_loader = test_loaders[i]
 
-            if "hate" in test_file_path:
+            if "twitter" in test_file_path:
                 df = pd.read_csv(test_file_path, sep="\t", header=0)
+                original_text = [text for text in df['text']]
+
+            elif "hate" in test_file_path:
+                df = pd.read_csv(test_file_path, sep="\t", header=0)
+                original_text = [text for text in df['example']]
             elif "cola" in test_file_path:
                 columns = ["id", "label", "star", "example"]
                 df = pd.read_csv(test_file_path, sep="\t", header=None, names=columns)
-
-            original_text = [text for text in df['example']]
+                original_text = [text for text in df['example']]
             original_text_id = 0
             
             logging.info(f"\nStarting analysis for {constituent_model_name}")

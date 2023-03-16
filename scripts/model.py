@@ -110,8 +110,7 @@ def run_cl(embeddings, model, data, only_test=False, interpretation=False):
     else:
         analysis = False
 
-    print(analysis)
-    raise Exception
+
 
     # data parameter
     path = data["path"]

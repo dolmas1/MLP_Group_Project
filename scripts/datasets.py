@@ -66,6 +66,7 @@ class Twitter(Dataset):
         self.labels = [self.label2id[label] for label in self.df['HOF']]
         self.texts = [tokenizer(text, return_tensors = "pt", padding='max_length', 
                                 truncation=True, max_length=512) for text in self.df['text']]
+
         
     def __len__(self):
         """Returns length based on the data frame length (= number of data points)
