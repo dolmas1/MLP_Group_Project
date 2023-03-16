@@ -1,0 +1,70 @@
+constituent_models:
+  - load_from: "../results/bert_medium1/model_best_acc.pt"   # path to a trained model you want to include (include the full .pt filename, not just the path!)
+    embeddings: "prajjwal1/bert-medium"                           # roberta-base or bert-base-cased or prajjwal1/bert-medium
+    tokenizer: "prajjwal1/bert-medium"                            # roberta-base or bert-base-cased or prajjwal1/bert-medium
+    model_name: "bert_medium_rand_1"                              # string to identify the name of this model (as multiple constituent models of same type may be included, we need to distinguish between them)
+    positive_class_weight: 1
+
+  - load_from: "../results/bert_medium2/model_best_acc.pt"
+    embeddings: "prajjwal1/bert-medium"   
+    tokenizer: "prajjwal1/bert-medium"
+    model_name: "bert_medium_rand_2"
+    positive_class_weight: 1
+
+  - load_from: "../results/bert_medium3/model_best_acc.pt"
+    embeddings: "prajjwal1/bert-medium"
+    tokenizer: "prajjwal1/bert-medium"
+    model_name: "bert_medium_rand_3"
+    positive_class_weight: 1
+
+  - load_from: "../results/roberta1/model_best_acc.pt"
+    embeddings: "roberta-base"
+    tokenizer: "roberta-base"
+    model_name: "roberta_rand_1"
+    positive_class_weight: 1
+
+  - load_from: "../results/roberta2/model_best_acc.pt"
+    embeddings: "roberta-base"
+    tokenizer: "roberta-base"
+    model_name: "roberta_rand_2"
+    positive_class_weight: 1
+
+  - load_from: "../results/roberta3/model_best_acc.pt"
+    embeddings: "roberta-base"
+    tokenizer: "roberta-base"
+    model_name: "roberta_rand_3"
+    positive_class_weight: 1
+
+  - load_from: "../results/bert1/model_best_acc.pt"
+    embeddings: "bert-base-cased"
+    tokenizer: "bert-base-cased"
+    model_name: "bert_rand_1"
+    positive_class_weight: 1
+
+  - load_from: "../results/bert2/model_best_acc.pt"
+    embeddings: "bert-base-cased"
+    tokenizer: "bert-base-cased"
+    model_name: "bert_rand_2"
+    positive_class_weight: 1
+
+  - load_from: "../results/bert3/model_best_acc.pt"
+    embeddings: "bert-base-cased"
+    tokenizer: "bert-base-cased"
+    model_name: "bert_rand_3"
+    positive_class_weight: 1
+
+ensemble_details:
+  random_seed: 42
+  ensemble_method: "inter"                            # one of 'majority', 'wt_avg', 'latent' (NOT IMP YET), 'inter'
+  destination_path: "../results/ensemble_inter_twitter"       # where will results be saved
+  ## TO DO: add cosine/dot product toggle
+  ## TO DO: add option to list which interpretability measures to use
+  ## TO DO: add modal vote, or weighted sum
+  ## TO DO: add additional scaling of inter agreement (for differentiation)
+    
+data:
+  path: "../data/twitter_hatespeech"
+  batch_size: 4
+  train_file: "twitter_hatespeech.tsv"
+  dev_file: "twitter_hatespeech.tsv"
+  test_file: "twitter_hatespeech.tsv"
