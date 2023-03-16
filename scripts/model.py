@@ -18,7 +18,7 @@ import random
 # import other scripts
 
 from classifiers import Classifier
-from datasets import HateSpeech, CoLA
+from datasets import HateSpeech, CoLA, Twitter
 from training import train
 from plot_loss import plot_loss
 from checkpoints import load_checkpoint
@@ -51,7 +51,7 @@ def set_seed(seed):
 
 tokenizer = AutoTokenizer.from_pretrained('bert-base-cased')
 
-def run_cl(embeddings, model, interpretation, data, only_test=False):
+def run_cl(embeddings, model, data, only_test=False, interpretation=False):
     """Main function that runs the classifier model, trains and evaluates it.
 
     Args:
@@ -105,7 +105,13 @@ def run_cl(embeddings, model, interpretation, data, only_test=False):
     tokenizer = AutoTokenizer.from_pretrained(tok)
 
     # interpretation stuff
-    analysis = interpretation["analysis"]
+    if interpretation:
+        analysis = interpretation["analysis"]
+    else:
+        analysis = False
+
+    print(analysis)
+    raise Exception
 
     # data parameter
     path = data["path"]
@@ -117,7 +123,14 @@ def run_cl(embeddings, model, interpretation, data, only_test=False):
 
     # load data
 
-    if "hate" in path:
+    if "twitter" in path:
+        if not only_test:
+            raise Exception("Twitter Dataset can be only used for testing!")
+        test_twitter_data = Twitter(root_dir=path, label_file=test_file, tokenizer=tokenizer)
+        test_dataloader = torch.utils.data.DataLoader(test_twitter_data, batch_size=batch_size)
+        
+
+    elif "hate" in path:
         train_hate_data = HateSpeech(root_dir=path, label_file=train_file, tokenizer=tokenizer)
         dev_hate_data = HateSpeech(root_dir=path, label_file=dev_file, tokenizer=tokenizer)
         test_hate_data = HateSpeech(root_dir=path, label_file=test_file, tokenizer=tokenizer)
