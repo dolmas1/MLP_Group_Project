@@ -5,9 +5,9 @@ df = pd.read_csv(f'../data/twitter_hatespeech/twitter_hatespeech.tsv', sep='\t')
 
 def clean_text(txt):
     txt_clean = re.sub(r"\[NEWLINE\]", ' ', txt)                                  # remove NEWLINE
-    txt_clean = re.sub(r"https?:\/\/.*[\r\n]*", '', txt_clean)                    # strip URLs
+    txt_clean = re.sub(r"https?:\/\/[\d|[a-z]|\.|\/]*", '', txt_clean)            # strip URLs
     txt_clean = re.sub(r"[^(\w|\s|(\'\,\-\_\.\%\!\$\&\(\)\;\:))]", '', txt_clean) # remove all other non-standard chars
-    txt_clean = re.sub(r"\s+", ' ', txt_clean)                                    # replace multiples spaces with single
+    txt_clean = re.sub(r" +", ' ', txt_clean)                                     # replace multiples spaces with single
     
     return txt_clean
 
