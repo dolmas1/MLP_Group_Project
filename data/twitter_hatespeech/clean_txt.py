@@ -12,4 +12,4 @@ def clean_text(txt):
     return txt_clean
 
 df.text = [clean_text(txt) for txt in df.text]
-df.to_csv(f'../data/twitter_hatespeech/twitter_hatespeech_clean.tsv', sep='\t')
+df.to_csv(f'../data/twitter_hatespeech/twitter_hatespeech_clean.tsv', sep='\t', index=False)
