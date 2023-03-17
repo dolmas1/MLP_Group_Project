@@ -65,6 +65,6 @@ ensemble_details:
 data:
   path: "../data/twitter_hatespeech"
   batch_size: 4
-  train_file: "twitter_hatespeech.tsv"
-  dev_file: "twitter_hatespeech.tsv"
-  test_file: "twitter_hatespeech.tsv"
+  train_file: "twitter_hatespeech_clean.tsv"
+  dev_file: "twitter_hatespeech_clean.tsv"
+  test_file: "twitter_hatespeech_clean.tsv"
