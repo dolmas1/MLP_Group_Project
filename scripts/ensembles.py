@@ -18,7 +18,7 @@ import random
 # import other scripts
 
 from classifiers import Classifier
-from datasets import HateSpeech, CoLA
+from datasets import HateSpeech, CoLA, Twitter
 from training import train
 from plot_loss import plot_loss
 from checkpoints import load_checkpoint
@@ -107,7 +107,12 @@ def run_ensemble(constituent_models, data, ensemble_details):
     test_file_path = os.path.join(path, test_file)
     
     # load data
-    if "hate" in path:
+    if "twitter" in path:
+        train_data_arr = [Twitter(root_dir=path, label_file=train_file, tokenizer=tok) for tok in tokenizers]
+        dev_data_arr = [Twitter(root_dir=path, label_file=dev_file, tokenizer=tok) for tok in tokenizers]
+        test_data_arr = [Twitter(root_dir=path, label_file=test_file, tokenizer=tok) for tok in tokenizers]
+    
+    elif "hate" in path:
         train_data_arr = [HateSpeech(root_dir=path, label_file=train_file, tokenizer=tok) for tok in tokenizers]
         dev_data_arr = [HateSpeech(root_dir=path, label_file=dev_file, tokenizer=tok) for tok in tokenizers]
         test_data_arr = [HateSpeech(root_dir=path, label_file=test_file, tokenizer=tok) for tok in tokenizers]

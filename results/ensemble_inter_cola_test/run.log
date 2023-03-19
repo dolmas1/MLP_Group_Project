@@ -1,0 +1,61 @@
+INFO:root:Welcome :)
+
+INFO:root:Device used: cuda:0
+
+INFO:root:Only testing, no training!
+INFO:root:Loading 9 Constituent models
+INFO:root:Model used: prajjwal1/bert-medium
+INFO:root:Model used: prajjwal1/bert-medium
+INFO:root:Model used: prajjwal1/bert-medium
+INFO:root:Model used: roberta-base
+INFO:root:Model used: roberta-base
+INFO:root:Model used: roberta-base
+INFO:root:Model used: bert-base-cased
+INFO:root:Model used: bert-base-cased
+INFO:root:Model used: bert-base-cased
+INFO:root:Model loaded from <== results/cola_medium1/model_best_acc.pt
+INFO:root:Model loaded from <== results/cola_medium2/model_best_acc.pt
+INFO:root:Model loaded from <== results/cola_medium3/model_best_acc.pt
+INFO:root:Model loaded from <== results/cola_roberta1/model_best_acc.pt
+INFO:root:Model loaded from <== results/cola_roberta2/model_best_acc.pt
+INFO:root:Model loaded from <== results/cola_roberta3/model_best_acc.pt
+INFO:root:Model loaded from <== results/cola_bert1/model_best_loss.pt
+INFO:root:Model loaded from <== results/cola_bert2/model_best_acc.pt
+INFO:root:Model loaded from <== results/cola_bert3/model_best_acc.pt
+INFO:root:
+Starting analysis for cola_bert_medium_rand_1_test
+INFO:root:
+Starting analysis for cola_bert_medium_rand_2_test
+INFO:root:
+Starting analysis for cola_bert_medium_rand_3_test
+INFO:root:
+Starting analysis for cola_roberta_rand_1_test
+INFO:root:
+Starting analysis for cola_roberta_rand_2_test
+INFO:root:
+Starting analysis for cola_roberta_rand_3_test
+INFO:root:
+Starting analysis for cola_bert_rand_1_test
+INFO:root:
+Starting analysis for cola_bert_rand_2_test
+INFO:root:
+Starting analysis for cola_bert_rand_3_test
+INFO:root:
+Saving all constituent model outputs
+INFO:root:Classification Report:
+INFO:root:
+              precision    recall  f1-score   support
+
+           1     0.7751    0.9153    0.8394       354
+           0     0.6939    0.4198    0.5231       162
+
+    accuracy                         0.7597       516
+   macro avg     0.7345    0.6675    0.6812       516
+weighted avg     0.7496    0.7597    0.7401       516
+
+INFO:root:True Positives: 324
+INFO:root:False Positives: 94
+INFO:root:True Negatives: 68
+INFO:root:False Negatives 30
+INFO:root:
+Goodbye :)
