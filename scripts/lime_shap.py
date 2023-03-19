@@ -24,9 +24,6 @@ def get_lime_scores(model, text, tokenizer):
 
     class_names = ['negative', 'positive']
 
-    def indices(lst, item):
-        return [i for i, x in enumerate(lst) if x == item]
-
     def predictor(input_string):
 
         padded_input_ids = []
@@ -47,28 +44,21 @@ def get_lime_scores(model, text, tokenizer):
 
     lime_scores = []
 
-    explainer = LimeTextExplainer(class_names=class_names, split_expression="\s")
+    explainer = LimeTextExplainer(class_names=class_names, split_expression="\s", bow=False)
 
     for t in text:
         ref_id = [x.item() for x in t if x != tokenizer.pad_token_id]
 
         tokens = [tok for tok in tokenizer.convert_ids_to_tokens(t) if tok not in [tokenizer.pad_token]]
 
-        double_tokens = dict((x, indices(tokens, x)) for x in set(tokens) if tokens.count(x) > 1)
-
         t = " ".join(tokens)
         exp = explainer.explain_instance(t, predictor, num_features=len(ref_id), num_samples=100)
-        
+
+        scores_dict = exp.as_map()[1]
+
         scores = []
-        for index, tok in enumerate(tokens): 
-            for (word, score) in exp.as_list():
-                if word == tok:
-                    if word in double_tokens:
-                        number_of_duplicates = len(double_tokens[word])
-                        lime_score = score / number_of_duplicates
-                        scores.append(lime_score)
-                    else:
-                        scores.append(score)
+        for index, tok in enumerate(tokens):
+            scores.append(scores_dict[index])
 
 
         assert len(scores) == len(ref_id)
