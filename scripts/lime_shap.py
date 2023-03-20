@@ -58,10 +58,11 @@ def get_lime_scores(model, text, tokenizer):
 
         scores = []
         for index, tok in enumerate(tokens):
-            scores.append(scores_dict[index])
+            scores.append(scores_dict[index][1])
 
 
         assert len(scores) == len(ref_id)
 
+        print(scores)
         lime_scores.append(scores)
     return lime_scores
