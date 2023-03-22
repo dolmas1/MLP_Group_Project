@@ -18,3 +18,13 @@ def clean_text(txt):
 
 df.text = [clean_text(txt) for txt in df.text]
 df.to_csv(f'../data/twitter_hatespeech/twitter_hatespeech_clean.tsv', sep='\t', index=False)
+
+
+# create an additional copy of the data with prefect class balance
+pos_sample = df[df['HOF'] == 'Hateful']
+neg_sample = df[df['HOF'] != 'Hateful'].sample(pos_sample.shape[0], random_state=42)
+
+df_balanced = pd.concat([pos_sample, neg_sample])
+df_balanced = df_balanced.sort_index()
+
+df_balanced.to_csv(f'../data/twitter_hatespeech/twitter_hatespeech_clean_balanced.tsv', sep='\t', index=False)

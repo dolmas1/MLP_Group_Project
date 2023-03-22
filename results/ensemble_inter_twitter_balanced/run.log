@@ -1,0 +1,61 @@
+INFO:root:Welcome :)
+
+INFO:root:Device used: cuda:0
+
+INFO:root:Only testing, no training!
+INFO:root:Loading 9 Constituent models
+INFO:root:Model used: prajjwal1/bert-medium
+INFO:root:Model used: prajjwal1/bert-medium
+INFO:root:Model used: prajjwal1/bert-medium
+INFO:root:Model used: roberta-base
+INFO:root:Model used: roberta-base
+INFO:root:Model used: roberta-base
+INFO:root:Model used: bert-base-cased
+INFO:root:Model used: bert-base-cased
+INFO:root:Model used: bert-base-cased
+INFO:root:Model loaded from <== ../results/bert_medium1/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert_medium2/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert_medium3/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/roberta1/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/roberta2/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/roberta3/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert1/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert2/model_best_acc.pt
+INFO:root:Model loaded from <== ../results/bert3/model_best_acc.pt
+INFO:root:
+Starting analysis for bert_medium_rand_1
+INFO:root:
+Starting analysis for bert_medium_rand_2
+INFO:root:
+Starting analysis for bert_medium_rand_3
+INFO:root:
+Starting analysis for roberta_rand_1
+INFO:root:
+Starting analysis for roberta_rand_2
+INFO:root:
+Starting analysis for roberta_rand_3
+INFO:root:
+Starting analysis for bert_rand_1
+INFO:root:
+Starting analysis for bert_rand_2
+INFO:root:
+Starting analysis for bert_rand_3
+INFO:root:
+Saving all constituent model outputs
+INFO:root:Classification Report:
+INFO:root:
+              precision    recall  f1-score   support
+
+           1     0.6667    0.7458    0.7040        59
+           0     0.7115    0.6271    0.6667        59
+
+    accuracy                         0.6864       118
+   macro avg     0.6891    0.6864    0.6853       118
+weighted avg     0.6891    0.6864    0.6853       118
+
+INFO:root:True Positives: 44
+INFO:root:False Positives: 22
+INFO:root:True Negatives: 37
+INFO:root:False Negatives 15
+INFO:root:
+Goodbye :)
