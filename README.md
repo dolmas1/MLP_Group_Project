@@ -1,5 +1,7 @@
 # MLP_Group_Project
 
+A project for building _interpretability ensembles_ of NLP classification models. For details, see our report: https://www.overleaf.com/project/63c8fe7f757d22009c9a1c48
+
 # 1. How to Train an individual Model
 ### 1. Install requirements (see Section 5)
 
