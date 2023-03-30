@@ -53,16 +53,6 @@ tokenizer = AutoTokenizer.from_pretrained('bert-base-cased')
 
 def run_cl(embeddings, model, data, only_test=False, interpretation=False):
     """Main function that runs the classifier model, trains and evaluates it.
-
-    Args:
-        embeddings (dict): dictionary containing descriptions of LMs for tokenizer and new LMs
-        model (dict): dictionary that values contain information about model parameters
-        data (dict): dictionary that values contains data paths
-        lda (dict): dictionary that values contains (n)lda data paths
-        explanations (int): number of attention explanations to output
-
-    Raises:
-        FileExistsError: if the destination path, where the model is stored, already exists
     """
 
     seed = model["random_seed"]

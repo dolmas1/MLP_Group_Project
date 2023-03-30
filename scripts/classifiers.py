@@ -17,14 +17,13 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class Classifier(nn.Module):
     """
-    Classifier Model for predictions, using pretrained BertForSequenceClassification or LongformerForSequenceClassification.
+    Classifier Model for predictions, using pretrained BertForSequenceClassification or RobertaForSequenceClassification.
     """
 
     def __init__(self, embedding_model, positive_class_weight = 1.):
         """Init method for the classifier model.
         Args:
-            architecture (str): BERT for BERT, LONGFORMER for LONGFORMER architecture
-            embeddings (str): path to the embeddings, either from HuggingFace or pretrained
+             embedding_model (str): path to the embeddings, either from HuggingFace or pretrained
             positive_class_weight (float): float defining the importance of the positive class for the loss value
         """
         super(Classifier, self).__init__()
