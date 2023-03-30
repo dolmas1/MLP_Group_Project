@@ -1,0 +1,12 @@
+python run.py ../yamls/bert_1.yaml
+python run.py ../yamls/bert_2.yaml
+python run.py ../yamls/bert_3.yaml
+python run.py ../yamls/bert_4.yaml
+python run.py ../yamls/bert_medium_1.yaml
+python run.py ../yamls/bert_medium_2.yaml
+python run.py ../yamls/bert_medium_3.yaml
+python run.py ../yamls/bert_medium_4.yaml
+python run.py ../yamls/roberta_1.yaml
+python run.py ../yamls/roberta2.yaml
+python run.py ../yamls/roberta3.yaml
+python run.py ../yamls/roberta4.yaml
